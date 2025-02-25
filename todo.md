@@ -3,15 +3,36 @@
 ## 1. Configuration initiale du projet
 
 ### Frontend (Angular)
-- [ ] Initialiser un nouveau projet Angular 19
-- [ ] Configurer TailwindCSS
-- [ ] Configurer Auth0 pour l'authentification
-- [ ] Mettre en place la structure de base du projet
-  - [ ] Components
-  - [ ] Services
-  - [ ] Guards
-  - [ ] Interfaces
-  - [ ] Environment files
+- [x] Initialiser un nouveau projet Angular 19
+- [x] Configurer TailwindCSS
+- [x] Configurer Auth0 pour l'authentification
+- [x] Mettre en place la structure de base du projet
+  - [x] Components
+  - [x] Services
+  - [x] Guards
+  - [x] Interfaces
+  - [x] Environment files
+
+### Components
+- [x] Layout
+  - [x] Navbar (avec état d'authentification)
+  - [ ] Footer
+
+- [x] Pages
+  - [x] Home (classement public)
+  - [x] Login/Register (Auth0)
+  - [x] Add Suggestion
+  - [x] Vote
+
+### Services
+- [x] Auth Service (intégration Auth0)
+- [ ] API Service
+- [ ] User Service
+- [ ] Suggestion Service
+- [ ] Vote Service
+
+### Guards
+- [x] Auth Guard pour les routes protégées
 
 ### Backend (Cloudflare Workers + D1)
 - [ ] Initialiser un nouveau projet Cloudflare Workers
