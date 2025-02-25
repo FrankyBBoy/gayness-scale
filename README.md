@@ -1,59 +1,77 @@
+# Gayness Scale
+
+Une application web permettant aux utilisateurs de voter et de suggérer des critères pour évaluer le niveau de "gayness" de manière ludique et respectueuse.
+
+## Structure du Projet
+
+Ce projet est organisé en monorepo avec les composants suivants :
+
+```
+/
+├── frontend/          # Application Angular (SPA)
+├── backend/           # API Cloudflare Workers
+└── docs/             # Documentation du projet
+```
+
+### Frontend (Angular 19)
+
+Le frontend est une Single Page Application (SPA) construite avec :
+- Angular 19
+- TailwindCSS pour le styling
+- Auth0 pour l'authentification
+
+Pour démarrer le frontend en développement :
+```bash
+cd frontend
+npm install
+npm run start
+```
+
+### Backend (Cloudflare Workers)
+
+L'API backend est construite avec :
+- Cloudflare Workers pour le serverless
+- TypeScript
+- D1 Database pour le stockage
+- Auth0 pour la sécurité
+
+Pour démarrer le backend en développement :
+```bash
+cd backend
+npm install
+npm run start
+```
+
+## Documentation
+
+- [Plan d'implémentation](docs/todo.md)
+
+## Développement
+
+### Prérequis
+
+- Node.js 20+
+- npm 10+
+- Compte Cloudflare (pour le backend)
+- Compte Auth0 (pour l'authentification)
+
+### Installation
+
+1. Cloner le repository
+```bash
+git clone https://github.com/votre-username/gayness-scale.git
+cd gayness-scale
+```
+
+2. Installer les dépendances
+```bash
 # Frontend
+cd frontend && npm install
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.0.0.
-
-## Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
+# Backend
+cd ../backend && npm install
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+## Contribution
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Les contributions sont les bienvenues ! Veuillez consulter le fichier [CONTRIBUTING.md](CONTRIBUTING.md) pour les détails. 
