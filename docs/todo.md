@@ -35,8 +35,8 @@
 - [x] Auth Guard pour les routes protégées
 
 ### Backend (Cloudflare Workers + D1)
-- [ ] Initialiser un nouveau projet Cloudflare Workers
-- [ ] Configurer D1 Database
+- [x] Initialiser un nouveau projet Cloudflare Workers
+- [x] Configurer D1 Database
 - [ ] Mettre en place la structure du projet
   - [ ] Routes
   - [ ] Middleware
@@ -46,14 +46,14 @@
 ## 2. Base de données
 
 ### Schéma D1
-- [ ] Créer les tables:
+- [x] Créer les tables:
   ```sql
-  - users (id, auth0_id, role, daily_votes_count, daily_suggestions_count, last_vote_date, last_suggestion_date)
-  - suggestions (id, user_id, content, elo_score, created_at)
-  - votes (id, user_id, winner_suggestion_id, loser_suggestion_id, created_at)
+  - users (id, email, name, created_at, updated_at)
+  - suggestions (id, title, description, user_id, status, created_at, updated_at)
+  - votes (id, suggestion_id, user_id, score, created_at, updated_at)
   ```
-- [ ] Créer les indexes nécessaires
-- [ ] Mettre en place les migrations
+- [x] Créer les indexes nécessaires
+- [x] Mettre en place les migrations
 
 ## 3. Backend Implementation
 
@@ -63,19 +63,19 @@
   - [ ] Endpoint de création/mise à jour utilisateur
 
 - [ ] Suggestions
-  - [ ] GET /api/suggestions (liste paginée, triée par elo_score)
-  - [ ] POST /api/suggestions (création, avec limite quotidienne)
-  - [ ] GET /api/suggestions/random-pair (pour le vote)
+  - [ ] GET /api/suggestions (liste paginée)
+  - [ ] POST /api/suggestions (création)
+  - [ ] GET /api/suggestions/:id (détails)
+  - [ ] PUT /api/suggestions/:id (mise à jour du statut)
 
 - [ ] Votes
-  - [ ] POST /api/votes (avec limite quotidienne)
-  - [ ] Implémentation de l'algorithme Elo
+  - [ ] POST /api/votes (création)
+  - [ ] GET /api/votes/user/:id (votes d'un utilisateur)
 
 ### Services
 - [ ] Service de gestion des utilisateurs
 - [ ] Service de gestion des suggestions
 - [ ] Service de gestion des votes
-- [ ] Service de calcul Elo
 
 ## 4. Frontend Implementation
 

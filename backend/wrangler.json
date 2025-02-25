@@ -1,0 +1,12 @@
+{
+  "name": "gayness-scale-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-02-25",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "gayness-scale-db",
+      "database_id": "6ab634ac-23cc-42f7-881d-4a174914c10e"
+    }
+  ]
+}
