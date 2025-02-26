@@ -63,7 +63,7 @@ export async function authMiddleware(request: Request): Promise<AuthContext> {
     const token = authHeader.split(' ')[1];
     const { payload } = await jwtVerify(token, JWKS, {
       issuer: `https://${domain}/`,
-      audience: 'https://gayness-scale-api.com',
+      audience: 'https://gayness-scale-backend/',
     });
 
     return {

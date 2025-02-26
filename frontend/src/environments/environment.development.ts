@@ -4,7 +4,7 @@ export const environment = {
     serverUrl: 'http://127.0.0.1:8787'
   },
   auth0: {
-    domain: 'dev-jf6w4dg6.us.auth0.com',
+    domain: 'dev-7y1grk6neur7cepa.us.auth0.com',
     clientId: 'tVKlDFBcmF9XHDtcNlOZJAKNfNyYPqBa',
     authorizationParams: {
       redirect_uri: 'http://localhost:4200/callback',
