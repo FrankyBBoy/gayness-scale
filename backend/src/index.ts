@@ -12,6 +12,9 @@
  */
 
 import { SuggestionService } from './services/suggestion.service';
+import { createVoteRouter } from './routes/vote.routes';
+import { createUserRouter } from './routes/user.routes';
+import { authMiddleware } from './middleware/auth';
 
 interface Env {
 	DB: D1Database;
@@ -19,13 +22,13 @@ interface Env {
 
 function json(data: any, status = 200) {
 	return new Response(JSON.stringify(data), {
-		status,
 		headers: {
 			'Content-Type': 'application/json',
 			'Access-Control-Allow-Origin': '*',
 			'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 			'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-auth0-domain',
 		},
+		status,
 	});
 }
 
@@ -65,6 +68,29 @@ export default {
 				const suggestions = await suggestionService.getSuggestions(page, pageSize, status);
 
 				return json(suggestions);
+			}
+
+			// Protected routes
+			if (path.startsWith('/api/votes') || path.startsWith('/api/users')) {
+				// Authenticate the request
+				const authResult = await authMiddleware(request);
+				if (!authResult.isAuthenticated) {
+					return error('Unauthorized', 401);
+				}
+
+				// Handle votes routes
+				if (path.startsWith('/api/votes')) {
+					const voteRouter = createVoteRouter();
+					const response = await voteRouter.handle(request, env, authResult);
+					if (response) return response;
+				}
+
+				// Handle user routes
+				if (path.startsWith('/api/users')) {
+					const userRouter = createUserRouter();
+					const response = await userRouter.handle(request, env, authResult);
+					if (response) return response;
+				}
 			}
 
 			// 404 for unmatched routes
