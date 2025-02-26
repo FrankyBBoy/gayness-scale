@@ -37,11 +37,11 @@
 ### Backend (Cloudflare Workers + D1)
 - [x] Initialiser un nouveau projet Cloudflare Workers
 - [x] Configurer D1 Database
-- [ ] Mettre en place la structure du projet
-  - [ ] Routes
-  - [ ] Middleware
-  - [ ] Services
-  - [ ] Types
+- [x] Mettre en place la structure du projet
+  - [x] Routes
+  - [x] Middleware
+  - [x] Services
+  - [x] Types
 
 ## 2. Base de données
 
@@ -58,23 +58,23 @@
 ## 3. Backend Implementation
 
 ### API Endpoints
-- [ ] Authentication
-  - [ ] Middleware de vérification JWT Auth0
-  - [ ] Endpoint de création/mise à jour utilisateur
+- [x] Authentication
+  - [x] Middleware de vérification JWT Auth0
+  - [x] Endpoint de création/mise à jour utilisateur
 
-- [ ] Suggestions
-  - [ ] GET /api/suggestions (liste paginée)
-  - [ ] POST /api/suggestions (création)
-  - [ ] GET /api/suggestions/:id (détails)
-  - [ ] PUT /api/suggestions/:id (mise à jour du statut)
+- [x] Suggestions
+  - [x] GET /api/suggestions (liste paginée)
+  - [x] POST /api/suggestions (création)
+  - [x] GET /api/suggestions/:id (détails)
+  - [x] PUT /api/suggestions/:id (mise à jour du statut)
 
 - [ ] Votes
   - [ ] POST /api/votes (création)
   - [ ] GET /api/votes/user/:id (votes d'un utilisateur)
 
 ### Services
-- [ ] Service de gestion des utilisateurs
-- [ ] Service de gestion des suggestions
+- [x] Service de gestion des utilisateurs
+- [x] Service de gestion des suggestions
 - [ ] Service de gestion des votes
 
 ## 4. Frontend Implementation
