@@ -2,6 +2,10 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  daily_votes_count: number;
+  daily_suggestions_count: number;
+  last_vote_date: string | null;
+  last_suggestion_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -30,8 +34,12 @@ export class UserService {
     // If update didn't affect any rows, insert new user
     const insertResult = await this.db
       .prepare(
-        `INSERT INTO users (id, email, name, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?)
+        `INSERT INTO users (
+          id, email, name, 
+          daily_votes_count, daily_suggestions_count,
+          last_vote_date, last_suggestion_date,
+          created_at, updated_at
+        ) VALUES (?, ?, ?, 0, 0, NULL, NULL, ?, ?)
          RETURNING *`
       )
       .bind(id, email, name, now, now)

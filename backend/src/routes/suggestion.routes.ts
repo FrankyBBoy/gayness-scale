@@ -66,13 +66,21 @@ export function createSuggestionRouter() {
       }
 
       const suggestionService = new SuggestionService(env.DB);
-      const suggestion = await suggestionService.createSuggestion({
-        title,
-        description,
-        user_id: ctx.user.sub,
-      });
+      
+      try {
+        const suggestion = await suggestionService.createSuggestion({
+          title,
+          description,
+          user_id: ctx.user.sub,
+        });
 
-      return json(suggestion, 201);
+        return json(suggestion, 201);
+      } catch (e) {
+        if (e instanceof Error && e.message === 'Daily suggestion limit reached') {
+          return error('Daily suggestion limit reached', 429);
+        }
+        throw e;
+      }
     } catch (e) {
       console.error('Error creating suggestion:', e);
       return error('Internal Server Error', 500);

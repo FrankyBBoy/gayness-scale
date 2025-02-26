@@ -48,8 +48,8 @@
 ### Schéma D1
 - [x] Créer les tables:
   ```sql
-  - users (id, email, name, created_at, updated_at)
-  - suggestions (id, title, description, user_id, status, created_at, updated_at)
+  - users (id, email, name, daily_votes_count, daily_suggestions_count, last_vote_date, last_suggestion_date, created_at, updated_at)
+  - suggestions (id, title, description, user_id, status, elo_score, created_at, updated_at)
   - votes (id, suggestion_id, user_id, score, created_at, updated_at)
   ```
 - [x] Créer les indexes nécessaires
@@ -63,19 +63,24 @@
   - [x] Endpoint de création/mise à jour utilisateur
 
 - [x] Suggestions
-  - [x] GET /api/suggestions (liste paginée)
-  - [x] POST /api/suggestions (création)
+  - [x] GET /api/suggestions (liste paginée, triée par score ELO)
+  - [x] POST /api/suggestions (création avec limite quotidienne)
   - [x] GET /api/suggestions/:id (détails)
   - [x] PUT /api/suggestions/:id (mise à jour du statut)
 
-- [ ] Votes
-  - [ ] POST /api/votes (création)
-  - [ ] GET /api/votes/user/:id (votes d'un utilisateur)
+- [x] Votes
+  - [x] POST /api/votes (création avec limite quotidienne)
+  - [x] GET /api/votes/user/:id (votes d'un utilisateur)
+  - [x] GET /api/votes/suggestion/:id (votes d'une suggestion)
 
 ### Services
 - [x] Service de gestion des utilisateurs
 - [x] Service de gestion des suggestions
-- [ ] Service de gestion des votes
+  - [x] Gestion des limites quotidiennes (5 suggestions/jour)
+  - [x] Tri par score ELO
+- [x] Service de gestion des votes
+  - [x] Implémentation de l'algorithme ELO
+  - [x] Gestion des limites quotidiennes (10 votes/jour)
 
 ## 4. Frontend Implementation
 

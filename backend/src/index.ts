@@ -14,6 +14,7 @@
 import { Router } from 'itty-router';
 import { createUserRouter } from './routes/user.routes';
 import { createSuggestionRouter } from './routes/suggestion.routes';
+import { createVoteRouter } from './routes/vote.routes';
 import { authMiddleware } from './middleware/auth';
 import { error } from './utils/response';
 
@@ -37,6 +38,9 @@ router.all('/api/users/*', createUserRouter().handle);
 
 // Mount suggestion routes
 router.all('/api/suggestions/*', createSuggestionRouter().handle);
+
+// Mount vote routes
+router.all('/api/votes/*', createVoteRouter().handle);
 
 // Default 404 handler
 router.all('*', () => error('Not Found', 404));
