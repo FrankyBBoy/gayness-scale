@@ -7,6 +7,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent)
   },
   {
+    path: 'callback',
+    loadComponent: () => import('./core/components/auth-callback/auth-callback.component').then(m => m.AuthCallbackComponent)
+  },
+  {
     path: 'vote',
     loadComponent: () => import('./pages/vote/vote.component').then(m => m.VoteComponent),
     canActivate: [authGuard]
