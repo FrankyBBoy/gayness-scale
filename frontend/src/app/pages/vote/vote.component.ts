@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VoteService } from '../../core/services/vote.service';
-import { SuggestionService, Suggestion, PaginatedSuggestions } from '../../core/services/suggestion.service';
+import { SuggestionService, Suggestion } from '../../core/services/suggestion.service';
 import { UserService, User } from '../../core/services/user.service';
-import { Observable, forkJoin, of, firstValueFrom } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-vote',
@@ -42,8 +42,7 @@ import { catchError, map, switchMap } from 'rxjs/operators';
               @for (suggestion of currentSuggestions; track suggestion.id) {
                 <div class="bg-white overflow-hidden shadow rounded-lg">
                   <div class="px-4 py-5 sm:p-6">
-                    <h3 class="text-lg font-medium text-gray-900">{{ suggestion.title }}</h3>
-                    <p class="mt-1 text-sm text-gray-500">{{ suggestion.description }}</p>
+                    <p class="text-gray-900">{{ suggestion.description }}</p>
                     <div class="mt-4 flex justify-between">
                       <button
                         (click)="voteForSuggestion(suggestion.id, 1)"
@@ -70,14 +69,12 @@ import { catchError, map, switchMap } from 'rxjs/operators';
   styles: []
 })
 export class VoteComponent implements OnInit {
-  leftSuggestion: Suggestion | null = null;
-  rightSuggestion: Suggestion | null = null;
+  currentSuggestions: Suggestion[] = [];
   loading = true;
   error: string | null = null;
   votingEnabled = false;
   remainingVotes = 0;
   currentUser: User | null = null;
-  currentSuggestions: Suggestion[] = [];
   currentPage = 1;
   pageSize = 10;
 
@@ -95,7 +92,6 @@ export class VoteComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    // First get the current user to check voting limits
     this.userService.getCurrentUser().pipe(
       switchMap(user => {
         this.currentUser = user;
@@ -106,112 +102,34 @@ export class VoteComponent implements OnInit {
           return of(null);
         }
         
-        // Then load suggestions
-        return this.suggestionService.getSuggestions(1, 10, 'approved').pipe(
-          map(response => {
-            const suggestions = response.items;
-            if (suggestions.length < 2) {
-              this.currentSuggestions = [];
-              this.loading = false;
-              return null;
-            }
-            
-            // Randomly select two different suggestions
-            const shuffled = suggestions.sort(() => Math.random() - 0.5);
-            this.leftSuggestion = shuffled[0];
-            this.rightSuggestion = shuffled[1];
-            this.loading = false;
-            return [shuffled[0], shuffled[1]] as [Suggestion, Suggestion];
-          }),
-          catchError(err => {
-            this.error = 'Failed to load suggestions. Please try again later.';
-            this.loading = false;
-            throw err;
-          })
-        );
+        return this.suggestionService.getSuggestions(this.currentPage, this.pageSize);
       })
     ).subscribe({
-      error: (err) => {
-        if (err.message === 'Not enough suggestions available for voting') {
-          this.error = null;
-          this.currentSuggestions = [];
-        } else {
-          this.error = 'Failed to load voting data. Please try again later.';
-          console.error('Error loading voting data:', err);
+      next: (response) => {
+        if (response) {
+          this.currentSuggestions = response.items;
         }
-        this.loading = false;
-      }
-    });
-  }
-
-  vote(winner: Suggestion, loser: Suggestion): void {
-    if (!this.votingEnabled || !this.currentUser) {
-      return;
-    }
-
-    this.loading = true;
-    this.error = null;
-
-    // Calculate scores: winner gets 1, loser gets 0
-    const winnerScore = 1;
-    const loserScore = 0;
-
-    // Create both votes in parallel
-    forkJoin([
-      this.voteService.createVote(winner.id, winnerScore),
-      this.voteService.createVote(loser.id, loserScore)
-    ]).pipe(
-      switchMap(() => this.userService.getCurrentUser()) // Refresh user data to update remaining votes
-    ).subscribe({
-      next: (user) => {
-        this.currentUser = user;
-        this.votingEnabled = this.userService.canVoteToday(user);
-        this.remainingVotes = this.userService.getRemainingVotes(user);
-        
-        if (this.votingEnabled) {
-          this.loadUserAndSuggestions();
-        } else {
-          this.loading = false;
-        }
-      },
-      error: (err) => {
-        this.error = 'Failed to submit vote. Please try again later.';
-        this.loading = false;
-        console.error('Error submitting vote:', err);
-      }
-    });
-  }
-
-  skipPair(): void {
-    if (!this.votingEnabled) {
-      return;
-    }
-    this.loadUserAndSuggestions();
-  }
-
-  loadSuggestions() {
-    this.loading = true;
-    this.error = null;
-    
-    this.suggestionService.getSuggestions(this.currentPage, this.pageSize, 'pending').subscribe({
-      next: (response: PaginatedSuggestions) => {
-        this.currentSuggestions = response.items;
         this.loading = false;
       },
       error: (err) => {
-        this.error = 'Failed to load suggestions. Please try again later.';
+        this.error = 'Failed to load voting data. Please try again later.';
         this.loading = false;
-        console.error('Error loading suggestions:', err);
+        console.error('Error loading voting data:', err);
       }
     });
   }
 
   async voteForSuggestion(suggestionId: number, score: number) {
+    if (!this.votingEnabled || !this.currentUser) {
+      return;
+    }
+
     try {
-      await firstValueFrom(this.voteService.createVote(suggestionId, score));
+      await this.voteService.createVote(suggestionId, score).toPromise();
       this.currentSuggestions = this.currentSuggestions.filter(s => s.id !== suggestionId);
+      
       if (this.currentSuggestions.length === 0) {
-        this.loadSuggestions();
+        this.loadUserAndSuggestions();
       }
     } catch (err) {
       this.error = 'Failed to submit vote. Please try again later.';

@@ -1,9 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SuggestionService, Suggestion, PaginatedSuggestions } from '../../core/services/suggestion.service';
-import { VoteService } from '../../core/services/vote.service';
-import { UserService } from '../../core/services/user.service';
-import { Observable, map } from 'rxjs';
+import { Router } from '@angular/router';
+import { SuggestionService, Suggestion } from '../../core/services/suggestion.service';
 
 @Component({
   selector: 'app-home',
@@ -14,31 +12,30 @@ import { Observable, map } from 'rxjs';
 })
 export class HomeComponent implements OnInit {
   suggestions: Suggestion[] = [];
-  currentPage = 1;
-  pageSize = 10;
-  totalItems = 0;
   loading = true;
   error: string | null = null;
+  currentPage = 1;
+  pageSize = 10;
+  totalPages = 1;
 
   constructor(
     private suggestionService: SuggestionService,
-    private voteService: VoteService,
-    private userService: UserService
+    private router: Router
   ) {}
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.loadSuggestions();
   }
 
-  loadSuggestions(): void {
+  loadSuggestions() {
     this.loading = true;
     this.error = null;
 
-    this.suggestionService.getSuggestions(this.currentPage, this.pageSize, 'approved')
+    this.suggestionService.getSuggestions(this.currentPage, this.pageSize)
       .subscribe({
-        next: (response: PaginatedSuggestions) => {
+        next: (response) => {
           this.suggestions = response.items;
-          this.totalItems = response.total;
+          this.totalPages = Math.ceil(response.total / this.pageSize);
           this.loading = false;
         },
         error: (err) => {
@@ -49,23 +46,16 @@ export class HomeComponent implements OnInit {
       });
   }
 
-  onPageChange(page: number): void {
+  onPageChange(page: number) {
     this.currentPage = page;
     this.loadSuggestions();
   }
 
-  get totalPages(): number {
-    return Math.ceil(this.totalItems / this.pageSize);
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
   }
 
-  get pages(): number[] {
-    const total = this.totalPages;
-    const current = this.currentPage;
-    const range = 2;
-    
-    const start = Math.max(1, current - range);
-    const end = Math.min(total, current + range);
-    
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  navigateToSuggest() {
+    this.router.navigate(['/suggest']);
   }
 } 

@@ -3,13 +3,9 @@ import { CommonModule } from '@angular/common';
 import { UserService, User } from '../../core/services/user.service';
 import { SuggestionService, Suggestion } from '../../core/services/suggestion.service';
 import { VoteService, Vote } from '../../core/services/vote.service';
-import { forkJoin } from 'rxjs';
-import { catchError, of } from 'rxjs';
 
 interface UserStats {
   totalSuggestions: number;
-  approvedSuggestions: number;
-  pendingSuggestions: number;
   totalVotes: number;
   averageScore: number;
 }
@@ -64,8 +60,6 @@ export class ProfileComponent implements OnInit {
                 // Calculate stats once we have both
                 this.userStats = {
                   totalSuggestions: suggestions.total,
-                  approvedSuggestions: this.recentSuggestions.filter(s => s.status === 'approved').length,
-                  pendingSuggestions: this.recentSuggestions.filter(s => s.status === 'pending').length,
                   totalVotes: votes.total,
                   averageScore: this.calculateAverageScore(votes.votes)
                 };
@@ -79,8 +73,6 @@ export class ProfileComponent implements OnInit {
                 this.recentVotes = [];
                 this.userStats = {
                   totalSuggestions: suggestions.total,
-                  approvedSuggestions: this.recentSuggestions.filter(s => s.status === 'approved').length,
-                  pendingSuggestions: this.recentSuggestions.filter(s => s.status === 'pending').length,
                   totalVotes: 0,
                   averageScore: 0
                 };
@@ -99,8 +91,6 @@ export class ProfileComponent implements OnInit {
                 this.recentVotes = votes.votes;
                 this.userStats = {
                   totalSuggestions: 0,
-                  approvedSuggestions: 0,
-                  pendingSuggestions: 0,
                   totalVotes: votes.total,
                   averageScore: this.calculateAverageScore(votes.votes)
                 };
@@ -111,8 +101,6 @@ export class ProfileComponent implements OnInit {
                 this.recentVotes = [];
                 this.userStats = {
                   totalSuggestions: 0,
-                  approvedSuggestions: 0,
-                  pendingSuggestions: 0,
                   totalVotes: 0,
                   averageScore: 0
                 };

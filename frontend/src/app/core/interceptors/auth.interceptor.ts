@@ -17,8 +17,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  // Check if this is a public endpoint
-  const isPublicEndpoint = PUBLIC_ENDPOINTS.some(endpoint => 
+  // Check if this is a public endpoint (only GET requests to /api/suggestions)
+  const isPublicEndpoint = req.method === 'GET' && PUBLIC_ENDPOINTS.some(endpoint => 
     req.url.includes(`${environment.api.serverUrl}${endpoint}`)
   );
 

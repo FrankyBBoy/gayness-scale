@@ -15,6 +15,7 @@ import { Router } from 'itty-router';
 import { SuggestionService } from './services/suggestion.service';
 import { createVoteRouter } from './routes/vote.routes';
 import { createUserRouter } from './routes/user.routes';
+import { createSuggestionRouter } from './routes/suggestion.routes';
 import { authMiddleware } from './middleware/auth';
 import { json, error } from './utils/response';
 
@@ -42,25 +43,19 @@ export default {
 			// Root route
 			router.get('/', () => json({ message: 'Gayness Scale API' }));
 
-			// Public routes
-			router.get('/api/suggestions', async (request: Request, env: Env) => {
-				const url = new URL(request.url);
-				const page = parseInt(url.searchParams.get('page') || '1');
-				const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
-				const status = url.searchParams.get('status') || undefined;
-
-				const suggestionService = new SuggestionService(env.DB);
-				const suggestions = await suggestionService.getSuggestions(page, pageSize, status);
-
-				return json(suggestions);
-			});
-
 			// Create sub-routers
 			const voteRouter = createVoteRouter();
 			const userRouter = createUserRouter();
+			const suggestionRouter = createSuggestionRouter();
 
 			// Protected routes middleware
 			router.all('/api/*', async (request: Request, env: Env) => {
+				// Skip auth only for GET /api/suggestions
+				const url = new URL(request.url);
+				if (request.method === 'GET' && (url.pathname === '/api/suggestions' || url.pathname.startsWith('/api/suggestions/'))) {
+					return null;
+				}
+
 				const authResult = await authMiddleware(request);
 				if (!authResult.isAuthenticated) {
 					return error('Unauthorized', 401);
@@ -77,6 +72,10 @@ export default {
 
 			router.all('/api/users/*', (request: Request, env: Env) => 
 				userRouter.handle(request, env, (request as any).auth)
+			);
+
+			router.all('/api/suggestions*', (request: Request, env: Env) => 
+				suggestionRouter.handle(request, env, (request as any).auth)
 			);
 
 			// 404 for unmatched routes

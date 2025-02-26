@@ -1,53 +1,50 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiService } from './api.service';
+import { environment } from '../../../environments/environment';
 
 export interface Suggestion {
   id: number;
-  title: string;
-  description: string | null;
+  description: string;
   user_id: string;
-  status: 'pending' | 'approved' | 'rejected';
-  elo_score: number;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface PaginatedSuggestions {
   items: Suggestion[];
   total: number;
-  page: number;
-  pageSize: number;
-}
-
-export interface CreateSuggestionData {
-  title: string;
-  description?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class SuggestionService {
-  constructor(private api: ApiService) {}
+  private apiUrl = `${environment.api.serverUrl}/api/suggestions`;
 
-  getSuggestions(page = 1, pageSize = 10, status?: string): Observable<PaginatedSuggestions> {
-    return this.api.get<PaginatedSuggestions>('/api/suggestions', {
-      page,
-      pageSize,
-      ...(status && { status })
-    });
+  constructor(private http: HttpClient) {}
+
+  createSuggestion(description: string): Observable<Suggestion> {
+    return this.http.post<Suggestion>(this.apiUrl, { description });
+  }
+
+  getSuggestions(page: number = 1, limit: number = 10): Observable<PaginatedSuggestions> {
+    return this.http.get<PaginatedSuggestions>(`${this.apiUrl}?page=${page}&limit=${limit}`);
+  }
+
+  getUserSuggestions(userId: string, page: number = 1, limit: number = 10): Observable<PaginatedSuggestions> {
+    return this.http.get<PaginatedSuggestions>(`${this.apiUrl}/user/${userId}?page=${page}&limit=${limit}`);
   }
 
   getSuggestionById(id: number): Observable<Suggestion> {
-    return this.api.get<Suggestion>(`/api/suggestions/${id}`);
+    return this.http.get<Suggestion>(`${this.apiUrl}/${id}`);
   }
 
-  createSuggestion(data: CreateSuggestionData): Observable<Suggestion> {
-    return this.api.post<Suggestion>('/api/suggestions', data);
+  updateSuggestion(id: number, description: string): Observable<Suggestion> {
+    return this.http.put<Suggestion>(`${this.apiUrl}/${id}`, { description });
   }
 
-  updateSuggestionStatus(id: number, status: 'pending' | 'approved' | 'rejected'): Observable<Suggestion> {
-    return this.api.put<Suggestion>(`/api/suggestions/${id}/status`, { status });
+  deleteSuggestion(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 } 

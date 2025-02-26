@@ -8,18 +8,17 @@ interface Env {
 }
 
 export function createSuggestionRouter() {
-  const router = Router();
+  const router = Router({ base: '/api/suggestions' });
 
-  // Get paginated suggestions
-  router.get('/api/suggestions', async (request: Request, env: Env) => {
+  // Get paginated suggestions (public)
+  router.get('/', async (request: Request, env: Env) => {
     try {
       const url = new URL(request.url);
       const page = parseInt(url.searchParams.get('page') || '1');
       const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
-      const status = url.searchParams.get('status') || undefined;
 
       const suggestionService = new SuggestionService(env.DB);
-      const suggestions = await suggestionService.getSuggestions(page, pageSize, status);
+      const suggestions = await suggestionService.findAll(page, pageSize);
 
       return json(suggestions);
     } catch (e) {
@@ -28,8 +27,8 @@ export function createSuggestionRouter() {
     }
   });
 
-  // Get suggestion by ID
-  router.get('/api/suggestions/:id', async (request: IRequest, env: Env) => {
+  // Get suggestion by ID (public)
+  router.get('/:id', async (request: IRequest, env: Env) => {
     try {
       const { id } = request.params;
       const suggestionId = parseInt(id);
@@ -39,7 +38,7 @@ export function createSuggestionRouter() {
       }
 
       const suggestionService = new SuggestionService(env.DB);
-      const suggestion = await suggestionService.getSuggestionById(suggestionId);
+      const suggestion = await suggestionService.findById(suggestionId);
 
       if (!suggestion) {
         return error('Suggestion not found', 404);
@@ -52,24 +51,23 @@ export function createSuggestionRouter() {
     }
   });
 
-  // Create new suggestion
-  router.post('/api/suggestions', async (request: Request, env: Env, ctx: AuthContext) => {
+  // Create new suggestion (protected)
+  router.post('/', async (request: Request, env: Env, ctx: AuthContext) => {
     if (!ctx?.user) {
       return error('Unauthorized', 401);
     }
 
     try {
-      const { title, description } = await request.json<{ title: string; description?: string }>();
+      const { description } = await request.json<{ description: string }>();
 
-      if (!title) {
-        return error('Title is required', 400);
+      if (!description) {
+        return error('Description is required', 400);
       }
 
       const suggestionService = new SuggestionService(env.DB);
       
       try {
-        const suggestion = await suggestionService.createSuggestion({
-          title,
+        const suggestion = await suggestionService.create({
           description,
           user_id: ctx.user.sub,
         });
@@ -87,8 +85,8 @@ export function createSuggestionRouter() {
     }
   });
 
-  // Update suggestion status (admin only)
-  router.put('/api/suggestions/:id/status', async (request: IRequest, env: Env, ctx: AuthContext) => {
+  // Update suggestion (protected)
+  router.put('/:id', async (request: IRequest, env: Env, ctx: AuthContext) => {
     if (!ctx?.user) {
       return error('Unauthorized', 401);
     }
@@ -96,19 +94,18 @@ export function createSuggestionRouter() {
     try {
       const { id } = request.params;
       const suggestionId = parseInt(id);
-      const { status } = await request.json<{ status: 'pending' | 'approved' | 'rejected' }>();
+      const { description } = await request.json<{ description: string }>();
 
       if (isNaN(suggestionId)) {
         return error('Invalid suggestion ID', 400);
       }
 
-      if (!status || !['pending', 'approved', 'rejected'].includes(status)) {
-        return error('Invalid status', 400);
+      if (!description) {
+        return error('Description is required', 400);
       }
 
-      // TODO: Add admin check here
       const suggestionService = new SuggestionService(env.DB);
-      const suggestion = await suggestionService.updateSuggestionStatus(suggestionId, status);
+      const suggestion = await suggestionService.update(suggestionId, { description });
 
       if (!suggestion) {
         return error('Suggestion not found', 404);
@@ -116,13 +113,10 @@ export function createSuggestionRouter() {
 
       return json(suggestion);
     } catch (e) {
-      console.error('Error updating suggestion status:', e);
+      console.error('Error updating suggestion:', e);
       return error('Internal Server Error', 500);
     }
   });
-
-  // Add a catch-all route for unmatched paths
-  router.all('*', () => error('Not Found', 404));
 
   return router;
 } 
