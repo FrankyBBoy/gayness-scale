@@ -109,7 +109,7 @@
   - [x] Calcul des scores moyens
 
 ### Guards
-- [ ] Auth Guard pour les routes protégées
+- [x] Auth Guard pour les routes protégées
 
 ## 5. Tests
 
