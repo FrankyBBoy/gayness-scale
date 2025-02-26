@@ -1,0 +1,165 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Error message -->
+    @if (error) {
+      <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-red-700">{{ error }}</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Loading spinner -->
+    @if (loading) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      </div>
+    }
+
+    @if (!loading && currentUser) {
+      <!-- User header -->
+      <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
+        <div class="px-4 py-5 sm:px-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <div class="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                <span class="text-xl font-medium text-indigo-800">{{ currentUser.name[0].toUpperCase() }}</span>
+              </div>
+            </div>
+            <div class="ml-4">
+              <h1 class="text-lg font-medium text-gray-900">{{ currentUser.name }}</h1>
+              <p class="text-sm text-gray-500">Member since {{ currentUser.created_at | date:'mediumDate' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily limits -->
+      <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 mb-8">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <dt class="text-sm font-medium text-gray-500 truncate">Remaining Votes Today</dt>
+            <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ remainingVotes }}</dd>
+          </div>
+        </div>
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <dt class="text-sm font-medium text-gray-500 truncate">Remaining Suggestions Today</dt>
+            <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ remainingSuggestions }}</dd>
+          </div>
+        </div>
+      </div>
+
+      @if (userStats) {
+        <!-- Statistics -->
+        <div class="bg-white shadow rounded-lg overflow-hidden mb-8">
+          <div class="px-4 py-5 sm:p-6">
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Statistics</h2>
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Total Suggestions</dt>
+                <dd class="mt-1 text-2xl font-semibold text-gray-900">{{ userStats.totalSuggestions }}</dd>
+                <div class="mt-2">
+                  <span class="text-sm text-gray-500">{{ userStats.approvedSuggestions }} approved</span>
+                  <span class="mx-2 text-gray-300">|</span>
+                  <span class="text-sm text-gray-500">{{ userStats.pendingSuggestions }} pending</span>
+                </div>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Total Votes</dt>
+                <dd class="mt-1 text-2xl font-semibold text-gray-900">{{ userStats.totalVotes }}</dd>
+              </div>
+              <div>
+                <dt class="text-sm font-medium text-gray-500">Average Score</dt>
+                <dd class="mt-1 text-2xl font-semibold text-gray-900">{{ userStats.averageScore }}</dd>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent activity -->
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <!-- Recent suggestions -->
+          <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="px-4 py-5 sm:px-6">
+              <h2 class="text-lg font-medium text-gray-900">Recent Suggestions</h2>
+            </div>
+            @if (recentSuggestions.length > 0) {
+              <ul role="list" class="divide-y divide-gray-200">
+                @for (suggestion of recentSuggestions; track suggestion.id) {
+                  <li class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">{{ suggestion.title }}</p>
+                        @if (suggestion.description) {
+                          <p class="mt-1 text-sm text-gray-500">{{ suggestion.description }}</p>
+                        }
+                      </div>
+                      <div class="ml-4 flex-shrink-0">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                              [class.bg-yellow-100]="suggestion.status === 'pending'"
+                              [class.text-yellow-800]="suggestion.status === 'pending'"
+                              [class.bg-green-100]="suggestion.status === 'approved'"
+                              [class.text-green-800]="suggestion.status === 'approved'"
+                              [class.bg-red-100]="suggestion.status === 'rejected'"
+                              [class.text-red-800]="suggestion.status === 'rejected'">
+                          {{ suggestion.status }}
+                        </span>
+                      </div>
+                    </div>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div class="px-4 py-5 sm:px-6 text-center text-gray-500">
+                No suggestions yet
+              </div>
+            }
+          </div>
+
+          <!-- Recent votes -->
+          <div class="bg-white shadow rounded-lg overflow-hidden">
+            <div class="px-4 py-5 sm:px-6">
+              <h2 class="text-lg font-medium text-gray-900">Recent Votes</h2>
+            </div>
+            @if (recentVotes.length > 0) {
+              <ul role="list" class="divide-y divide-gray-200">
+                @for (vote of recentVotes; track vote.id) {
+                  <li class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center">
+                        <span class="inline-flex items-center justify-center h-8 w-8 rounded-full"
+                              [class.bg-green-100]="vote.score > 0.5"
+                              [class.bg-red-100]="vote.score <= 0.5">
+                          <span class="text-sm font-medium"
+                                [class.text-green-800]="vote.score > 0.5"
+                                [class.text-red-800]="vote.score <= 0.5">
+                            {{ vote.score }}
+                          </span>
+                        </span>
+                      </div>
+                      <div class="ml-4 flex-shrink-0">
+                        <p class="text-sm text-gray-500">{{ vote.created_at | date:'shortTime' }}</p>
+                      </div>
+                    </div>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div class="px-4 py-5 sm:px-6 text-center text-gray-500">
+                No votes yet
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+</div> 

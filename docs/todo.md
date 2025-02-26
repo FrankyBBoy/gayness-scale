@@ -85,16 +85,16 @@
 ## 4. Frontend Implementation
 
 ### Components
-- [ ] Layout
-  - [ ] Navbar (avec état d'authentification)
-  - [ ] Footer
+- [x] Layout
+  - [x] Navbar (avec état d'authentification)
+  - [x] Footer
 
-- [ ] Pages
-  - [ ] Home (classement public)
-  - [ ] Login/Register (Auth0)
-  - [ ] Add Suggestion
-  - [ ] Vote
-  - [ ] Profile (stats utilisateur)
+- [x] Pages
+  - [x] Home (classement public)
+  - [x] Login/Register (Auth0)
+  - [x] Add Suggestion
+  - [x] Vote
+  - [x] Profile (stats utilisateur)
 
 ### Services
 - [x] Auth Service (intégration Auth0)
