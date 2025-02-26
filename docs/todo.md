@@ -26,10 +26,10 @@
 
 ### Services
 - [x] Auth Service (intégration Auth0)
-- [ ] API Service
-- [ ] User Service
-- [ ] Suggestion Service
-- [ ] Vote Service
+- [x] API Service
+- [x] User Service
+- [x] Suggestion Service
+- [x] Vote Service
 
 ### Guards
 - [x] Auth Guard pour les routes protégées
@@ -97,11 +97,16 @@
   - [ ] Profile (stats utilisateur)
 
 ### Services
-- [ ] Auth Service (intégration Auth0)
-- [ ] API Service
-- [ ] User Service
-- [ ] Suggestion Service
-- [ ] Vote Service
+- [x] Auth Service (intégration Auth0)
+- [x] API Service
+- [x] User Service
+  - [x] Gestion des limites quotidiennes
+- [x] Suggestion Service
+  - [x] Intégration avec l'API
+  - [x] Gestion des suggestions
+- [x] Vote Service
+  - [x] Intégration avec l'API
+  - [x] Calcul des scores moyens
 
 ### Guards
 - [ ] Auth Guard pour les routes protégées

@@ -1,0 +1,123 @@
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">Gayness Scale Ranking</h1>
+
+    <!-- Error message -->
+    @if (error) {
+      <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <p class="text-sm text-red-700">{{ error }}</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Loading spinner -->
+    @if (loading) {
+      <div class="flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      </div>
+    }
+
+    <!-- Suggestions list -->
+    @if (!loading && suggestions.length > 0) {
+      <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul role="list" class="divide-y divide-gray-200">
+          @for (suggestion of suggestions; track suggestion.id) {
+            <li class="px-6 py-4 hover:bg-gray-50">
+              <div class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center">
+                    <!-- ELO Score badge -->
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 mr-3">
+                      {{ suggestion.elo_score }}
+                    </span>
+                    <!-- Title -->
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      {{ suggestion.title }}
+                    </p>
+                  </div>
+                  @if (suggestion.description) {
+                    <p class="mt-1 text-sm text-gray-500">
+                      {{ suggestion.description }}
+                    </p>
+                  }
+                </div>
+                <!-- Created date -->
+                <div class="ml-4 flex-shrink-0">
+                  <p class="text-sm text-gray-500">
+                    {{ suggestion.created_at | date:'mediumDate' }}
+                  </p>
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages > 1) {
+        <div class="flex justify-center mt-6">
+          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+            <!-- Previous button -->
+            <button
+              [disabled]="currentPage === 1"
+              (click)="onPageChange(currentPage - 1)"
+              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium"
+              [class.text-gray-300]="currentPage === 1"
+              [class.text-gray-700]="currentPage !== 1"
+              [class.hover:bg-gray-50]="currentPage !== 1">
+              <span class="sr-only">Previous</span>
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+
+            <!-- Page numbers -->
+            @for (page of pages; track page) {
+              <button
+                (click)="onPageChange(page)"
+                [class.bg-indigo-50]="page === currentPage"
+                [class.border-indigo-500]="page === currentPage"
+                [class.text-indigo-600]="page === currentPage"
+                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium hover:bg-gray-50">
+                {{ page }}
+              </button>
+            }
+
+            <!-- Next button -->
+            <button
+              [disabled]="currentPage === totalPages"
+              (click)="onPageChange(currentPage + 1)"
+              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium"
+              [class.text-gray-300]="currentPage === totalPages"
+              [class.text-gray-700]="currentPage !== totalPages"
+              [class.hover:bg-gray-50]="currentPage !== totalPages">
+              <span class="sr-only">Next</span>
+              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </nav>
+        </div>
+      }
+    }
+
+    <!-- Empty state -->
+    @if (!loading && suggestions.length === 0) {
+      <div class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No suggestions</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by creating a new suggestion.</p>
+      </div>
+    }
+  </div>
+</div> 
