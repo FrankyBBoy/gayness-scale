@@ -55,6 +55,10 @@ export default {
 				return json(suggestions);
 			});
 
+			// Create sub-routers
+			const voteRouter = createVoteRouter();
+			const userRouter = createUserRouter();
+
 			// Protected routes middleware
 			router.all('/api/*', async (request: Request, env: Env) => {
 				const authResult = await authMiddleware(request);
@@ -67,9 +71,6 @@ export default {
 			});
 
 			// Mount sub-routers
-			const voteRouter = createVoteRouter();
-			const userRouter = createUserRouter();
-
 			router.all('/api/votes/*', (request: Request, env: Env) => 
 				voteRouter.handle(request, env, (request as any).auth)
 			);

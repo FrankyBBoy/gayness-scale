@@ -1,4 +1,4 @@
-import { Router } from 'itty-router';
+import { Router, IRequest } from 'itty-router';
 import { AuthContext } from '../middleware/auth';
 import { VoteService } from '../services/vote.service';
 import { json, error } from '../utils/response';
@@ -41,16 +41,17 @@ export function createVoteRouter() {
   });
 
   // Get user's votes
-  router.get('/user/:id', async (request: Request, env: Env, ctx: AuthContext) => {
+  router.get('/user/:id', async (request: IRequest, env: Env, ctx: AuthContext) => {
     if (!ctx?.user) {
       return error('Unauthorized', 401);
     }
 
     try {
       const { id } = request.params;
+      const decodedId = decodeURIComponent(id);
       
       // Users can only view their own votes
-      if (id !== ctx.user.sub) {
+      if (decodedId !== ctx.user.sub) {
         return error('Forbidden', 403);
       }
 
@@ -59,7 +60,7 @@ export function createVoteRouter() {
       const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
 
       const voteService = new VoteService(env.DB);
-      const votes = await voteService.getUserVotes(id, page, pageSize);
+      const votes = await voteService.getUserVotes(decodedId, page, pageSize);
 
       return json(votes);
     } catch (e) {
@@ -69,7 +70,7 @@ export function createVoteRouter() {
   });
 
   // Get votes for a suggestion
-  router.get('/suggestion/:id', async (request: Request, env: Env) => {
+  router.get('/suggestion/:id', async (request: IRequest, env: Env) => {
     try {
       const { id } = request.params;
       const suggestionId = parseInt(id);

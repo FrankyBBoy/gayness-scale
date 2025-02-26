@@ -4,6 +4,7 @@ import { UserService, User } from '../../core/services/user.service';
 import { SuggestionService, Suggestion } from '../../core/services/suggestion.service';
 import { VoteService, Vote } from '../../core/services/vote.service';
 import { forkJoin } from 'rxjs';
+import { catchError, of } from 'rxjs';
 
 interface UserStats {
   totalSuggestions: number;
@@ -46,42 +47,85 @@ export class ProfileComponent implements OnInit {
     this.userService.getCurrentUser().subscribe({
       next: (user) => {
         this.currentUser = user;
+        console.log('user', user);
         
-        // Then load all user data in parallel
-        forkJoin({
-          suggestions: this.suggestionService.getSuggestions(1, 5), // Get last 5 suggestions
-          votes: this.voteService.getUserVotes(user.id, 1, 5) // Get last 5 votes
-        }).subscribe({
-          next: (data) => {
-            // Process suggestions
-            this.recentSuggestions = data.suggestions.items;
-            const suggestions = data.suggestions.items;
+        // Load suggestions and votes separately for better error tracking
+        this.suggestionService.getSuggestions(1, 5).subscribe({
+          next: (suggestions) => {
+            console.log('suggestions loaded:', suggestions);
+            this.recentSuggestions = suggestions.items;
             
-            // Calculate suggestion stats
-            this.userStats = {
-              totalSuggestions: data.suggestions.total,
-              approvedSuggestions: suggestions.filter(s => s.status === 'approved').length,
-              pendingSuggestions: suggestions.filter(s => s.status === 'pending').length,
-              totalVotes: data.votes.total,
-              averageScore: this.calculateAverageScore(data.votes.votes)
-            };
-
-            // Store recent votes
-            this.recentVotes = data.votes.votes;
-            
-            this.loading = false;
+            // Now load votes
+            this.voteService.getUserVotes(user.id, 1, 5).subscribe({
+              next: (votes) => {
+                console.log('votes loaded:', votes);
+                this.recentVotes = votes.votes;
+                
+                // Calculate stats once we have both
+                this.userStats = {
+                  totalSuggestions: suggestions.total,
+                  approvedSuggestions: this.recentSuggestions.filter(s => s.status === 'approved').length,
+                  pendingSuggestions: this.recentSuggestions.filter(s => s.status === 'pending').length,
+                  totalVotes: votes.total,
+                  averageScore: this.calculateAverageScore(votes.votes)
+                };
+                
+                console.log('userStats calculated:', this.userStats);
+                this.loading = false;
+              },
+              error: (err) => {
+                console.error('Error loading votes:', err);
+                // Set empty votes but don't fail
+                this.recentVotes = [];
+                this.userStats = {
+                  totalSuggestions: suggestions.total,
+                  approvedSuggestions: this.recentSuggestions.filter(s => s.status === 'approved').length,
+                  pendingSuggestions: this.recentSuggestions.filter(s => s.status === 'pending').length,
+                  totalVotes: 0,
+                  averageScore: 0
+                };
+                this.loading = false;
+              }
+            });
           },
           error: (err) => {
-            this.error = 'Failed to load profile data. Please try again later.';
-            this.loading = false;
-            console.error('Error loading profile data:', err);
+            console.error('Error loading suggestions:', err);
+            // Set empty suggestions but continue with votes
+            this.recentSuggestions = [];
+            
+            this.voteService.getUserVotes(user.id, 1, 5).subscribe({
+              next: (votes) => {
+                console.log('votes loaded (after suggestions error):', votes);
+                this.recentVotes = votes.votes;
+                this.userStats = {
+                  totalSuggestions: 0,
+                  approvedSuggestions: 0,
+                  pendingSuggestions: 0,
+                  totalVotes: votes.total,
+                  averageScore: this.calculateAverageScore(votes.votes)
+                };
+                this.loading = false;
+              },
+              error: (voteErr) => {
+                console.error('Error loading votes (after suggestions error):', voteErr);
+                this.recentVotes = [];
+                this.userStats = {
+                  totalSuggestions: 0,
+                  approvedSuggestions: 0,
+                  pendingSuggestions: 0,
+                  totalVotes: 0,
+                  averageScore: 0
+                };
+                this.loading = false;
+              }
+            });
           }
         });
       },
       error: (err) => {
+        console.error('Error loading user:', err);
         this.error = 'Failed to load user data. Please try again later.';
         this.loading = false;
-        console.error('Error loading user data:', err);
       }
     });
   }

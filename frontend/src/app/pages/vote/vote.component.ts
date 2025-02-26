@@ -106,39 +106,42 @@ export class VoteComponent implements OnInit {
           return of(null);
         }
         
-        // Then load two random suggestions
-        return this.loadRandomSuggestions();
+        // Then load suggestions
+        return this.suggestionService.getSuggestions(1, 10, 'approved').pipe(
+          map(response => {
+            const suggestions = response.items;
+            if (suggestions.length < 2) {
+              this.currentSuggestions = [];
+              this.loading = false;
+              return null;
+            }
+            
+            // Randomly select two different suggestions
+            const shuffled = suggestions.sort(() => Math.random() - 0.5);
+            this.leftSuggestion = shuffled[0];
+            this.rightSuggestion = shuffled[1];
+            this.loading = false;
+            return [shuffled[0], shuffled[1]] as [Suggestion, Suggestion];
+          }),
+          catchError(err => {
+            this.error = 'Failed to load suggestions. Please try again later.';
+            this.loading = false;
+            throw err;
+          })
+        );
       })
     ).subscribe({
       error: (err) => {
-        this.error = 'Failed to load voting data. Please try again later.';
+        if (err.message === 'Not enough suggestions available for voting') {
+          this.error = null;
+          this.currentSuggestions = [];
+        } else {
+          this.error = 'Failed to load voting data. Please try again later.';
+          console.error('Error loading voting data:', err);
+        }
         this.loading = false;
-        console.error('Error loading voting data:', err);
       }
     });
-  }
-
-  private loadRandomSuggestions(): Observable<[Suggestion, Suggestion]> {
-    return this.suggestionService.getSuggestions(1, 10, 'approved').pipe(
-      map(response => {
-        const suggestions = response.items;
-        if (suggestions.length < 2) {
-          throw new Error('Not enough suggestions available for voting');
-        }
-        
-        // Randomly select two different suggestions
-        const shuffled = suggestions.sort(() => Math.random() - 0.5);
-        this.leftSuggestion = shuffled[0];
-        this.rightSuggestion = shuffled[1];
-        this.loading = false;
-        return [shuffled[0], shuffled[1]] as [Suggestion, Suggestion];
-      }),
-      catchError(err => {
-        this.error = 'Not enough suggestions available for voting.';
-        this.loading = false;
-        throw err;
-      })
-    );
   }
 
   vote(winner: Suggestion, loser: Suggestion): void {
@@ -166,7 +169,7 @@ export class VoteComponent implements OnInit {
         this.remainingVotes = this.userService.getRemainingVotes(user);
         
         if (this.votingEnabled) {
-          this.loadRandomSuggestions().subscribe();
+          this.loadUserAndSuggestions();
         } else {
           this.loading = false;
         }
@@ -183,7 +186,7 @@ export class VoteComponent implements OnInit {
     if (!this.votingEnabled) {
       return;
     }
-    this.loadRandomSuggestions().subscribe();
+    this.loadUserAndSuggestions();
   }
 
   loadSuggestions() {

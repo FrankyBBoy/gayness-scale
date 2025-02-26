@@ -1,8 +1,13 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { from, switchMap, catchError } from 'rxjs';
+import { from, switchMap, catchError, throwError } from 'rxjs';
 import { AuthService as Auth0Service } from '@auth0/auth0-angular';
 import { environment } from '../../../environments/environment';
+
+// List of public endpoints that don't require authentication
+const PUBLIC_ENDPOINTS = [
+  '/api/suggestions'
+];
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth0 = inject(Auth0Service);
@@ -12,14 +17,23 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
+  // Check if this is a public endpoint
+  const isPublicEndpoint = PUBLIC_ENDPOINTS.some(endpoint => 
+    req.url.includes(`${environment.api.serverUrl}${endpoint}`)
+  );
+
+  if (isPublicEndpoint) {
+    return next(req);
+  }
+
   console.log('Intercepting request to:', req.url);
   
-  // First check if the user is authenticated
-  return from(auth0.isAuthenticated$).pipe(
+  // Check if the user is authenticated
+  return auth0.isAuthenticated$.pipe(
     switchMap(isAuthenticated => {
       if (!isAuthenticated) {
         console.log('User is not authenticated, skipping token fetch');
-        return next(req);
+        return throwError(() => new Error('User not authenticated'));
       }
 
       console.log('User is authenticated, getting token...');
@@ -39,14 +53,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         }),
         catchError(error => {
           console.error('Error getting access token:', error);
-          // En cas d'erreur, on continue sans token
-          return next(req);
+          return throwError(() => error);
         })
       );
     }),
     catchError(error => {
       console.error('Error in auth interceptor:', error);
-      return next(req);
+      return throwError(() => error);
     })
   );
 }; 
