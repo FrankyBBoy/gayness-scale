@@ -5,7 +5,7 @@ compatibility_flags = ["nodejs_compat"]
 
 [vars]
 AUTH0_DOMAIN = "dev-7y1grk6neur7cepa.us.auth0.com"
-AUTH0_AUDIENCE = "https://gayness-scale-api.com"
+AUTH0_AUDIENCE = "https://gayness-scale-backend/"
 
 [[d1_databases]]
 binding = "DB"
