@@ -48,7 +48,7 @@ export class AuthService implements OnDestroy {
   private syncUserWithBackend(user: any): void {
     if (!user) return;
 
-    this.http.post(`${environment.api.serverUrl}/users/sync`, {
+    this.http.post(`${environment.api.serverUrl}/api/users/sync`, {
       id: user.sub,
       email: user.email,
       name: user.name
