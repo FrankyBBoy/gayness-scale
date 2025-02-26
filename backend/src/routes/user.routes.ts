@@ -1,42 +1,42 @@
 import { Router } from 'itty-router';
 import { AuthContext } from '../middleware/auth';
 import { UserService } from '../services/user.service';
-import { json } from '../utils/response';
+import { json, error } from '../utils/response';
 
 interface Env {
   DB: D1Database;
 }
 
 export function createUserRouter() {
-  const router = Router({ base: '/api/users' });
+  const router = Router();
   
   // Get current user
-  router.get('/', async (request: Request, env: Env, ctx: AuthContext) => {
+  router.get('/api/users', async (request: Request, env: Env, ctx: AuthContext) => {
     if (!ctx?.user) {
-      return new Response('Unauthorized', { status: 401 });
+      return error('Unauthorized', 401);
     }
 
     const userService = new UserService(env.DB);
     const user = await userService.getUserById(ctx.user.sub);
 
     if (!user) {
-      return new Response('User not found', { status: 404 });
+      return error('User not found', 404);
     }
 
     return json(user);
   });
 
   // Create or update user
-  router.post('/', async (request: Request, env: Env, ctx: AuthContext) => {
+  router.post('/api/users', async (request: Request, env: Env, ctx: AuthContext) => {
     if (!ctx?.user) {
-      return new Response('Unauthorized', { status: 401 });
+      return error('Unauthorized', 401);
     }
 
     try {
       const { name } = await request.json<{ name: string }>();
       
       if (!name) {
-        return new Response('Name is required', { status: 400 });
+        return error('Name is required', 400);
       }
 
       const userService = new UserService(env.DB);
@@ -47,9 +47,9 @@ export function createUserRouter() {
       );
 
       return json(user);
-    } catch (error) {
-      console.error('Error creating/updating user:', error);
-      return new Response('Internal Server Error', { status: 500 });
+    } catch (err) {
+      console.error('Error creating/updating user:', err);
+      return error('Internal Server Error', 500);
     }
   });
 
