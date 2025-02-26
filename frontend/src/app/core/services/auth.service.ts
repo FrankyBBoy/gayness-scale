@@ -1,7 +1,9 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { AuthService as Auth0Service } from '@auth0/auth0-angular';
 import { Observable, Subject } from 'rxjs';
-import { map, tap, takeUntil, distinctUntilChanged, shareReplay } from 'rxjs/operators';
+import { map, tap, takeUntil, distinctUntilChanged, shareReplay, filter } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +13,10 @@ export class AuthService implements OnDestroy {
   private isAuthenticated: Observable<boolean>;
   private userProfile: Observable<any>;
 
-  constructor(private auth0: Auth0Service) {
+  constructor(
+    private auth0: Auth0Service,
+    private http: HttpClient
+  ) {
     // Initialize streams
     this.isAuthenticated = this.auth0.isAuthenticated$.pipe(
       distinctUntilChanged(),
@@ -22,7 +27,12 @@ export class AuthService implements OnDestroy {
 
     this.userProfile = this.auth0.user$.pipe(
       distinctUntilChanged(),
-      tap(user => console.log('Auth service - User profile:', user)),
+      tap(user => {
+        console.log('Auth service - User profile:', user);
+        if (user) {
+          this.syncUserWithBackend(user);
+        }
+      }),
       shareReplay(1),
       takeUntil(this.destroy$)
     );
@@ -33,6 +43,21 @@ export class AuthService implements OnDestroy {
     ).subscribe(
       error => console.error('Auth service - Error:', error)
     );
+  }
+
+  private syncUserWithBackend(user: any): void {
+    if (!user) return;
+
+    this.http.post(`${environment.api.serverUrl}/users/sync`, {
+      id: user.sub,
+      email: user.email,
+      name: user.name
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => console.log('User synced with backend'),
+      error: (error) => console.error('Error syncing user with backend:', error)
+    });
   }
 
   get isAuthenticated$(): Observable<boolean> {

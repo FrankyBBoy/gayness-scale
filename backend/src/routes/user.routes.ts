@@ -26,6 +26,34 @@ export function createUserRouter() {
     return json(user);
   });
 
+  // Sync user from Auth0
+  router.post('/api/users/sync', async (request: Request, env: Env, ctx: AuthContext) => {
+    if (!ctx?.user) {
+      return error('Unauthorized', 401);
+    }
+
+    try {
+      const { id, email, name } = await request.json<{ id: string; email: string; name: string }>();
+      
+      if (!id || !email || !name) {
+        return error('Id, email and name are required', 400);
+      }
+
+      // Verify that the authenticated user is syncing their own data
+      if (id !== ctx.user.sub) {
+        return error('Unauthorized: Cannot sync data for another user', 403);
+      }
+
+      const userService = new UserService(env.DB);
+      const user = await userService.createOrUpdateUser(id, email, name);
+
+      return json(user);
+    } catch (err) {
+      console.error('Error syncing user:', err);
+      return error('Internal Server Error', 500);
+    }
+  });
+
   // Create or update user
   router.post('/api/users', async (request: Request, env: Env, ctx: AuthContext) => {
     if (!ctx?.user) {
