@@ -1,4 +1,4 @@
-import { Router } from 'itty-router';
+import { Router, IRequest } from 'itty-router';
 import { AuthContext } from '../middleware/auth';
 import { SuggestionService } from '../services/suggestion.service';
 import { json, error } from '../utils/response';
@@ -8,10 +8,10 @@ interface Env {
 }
 
 export function createSuggestionRouter() {
-  const router = Router({ base: '/api/suggestions' });
+  const router = Router();
 
   // Get paginated suggestions
-  router.get('/', async (request: Request, env: Env) => {
+  router.get('/api/suggestions', async (request: Request, env: Env) => {
     try {
       const url = new URL(request.url);
       const page = parseInt(url.searchParams.get('page') || '1');
@@ -29,7 +29,7 @@ export function createSuggestionRouter() {
   });
 
   // Get suggestion by ID
-  router.get('/:id', async (request: Request, env: Env) => {
+  router.get('/api/suggestions/:id', async (request: IRequest, env: Env) => {
     try {
       const { id } = request.params;
       const suggestionId = parseInt(id);
@@ -53,7 +53,7 @@ export function createSuggestionRouter() {
   });
 
   // Create new suggestion
-  router.post('/', async (request: Request, env: Env, ctx: AuthContext) => {
+  router.post('/api/suggestions', async (request: Request, env: Env, ctx: AuthContext) => {
     if (!ctx?.user) {
       return error('Unauthorized', 401);
     }
@@ -88,7 +88,7 @@ export function createSuggestionRouter() {
   });
 
   // Update suggestion status (admin only)
-  router.put('/:id/status', async (request: Request, env: Env, ctx: AuthContext) => {
+  router.put('/api/suggestions/:id/status', async (request: IRequest, env: Env, ctx: AuthContext) => {
     if (!ctx?.user) {
       return error('Unauthorized', 401);
     }
@@ -120,6 +120,9 @@ export function createSuggestionRouter() {
       return error('Internal Server Error', 500);
     }
   });
+
+  // Add a catch-all route for unmatched paths
+  router.all('*', () => error('Not Found', 404));
 
   return router;
 } 

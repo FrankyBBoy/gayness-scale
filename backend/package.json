@@ -1,5 +1,5 @@
 {
-	"name": "backend",
+	"name": "gayness-scale-api",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
@@ -7,17 +7,18 @@
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
 		"test": "vitest",
-		"cf-typegen": "wrangler types"
+		"cf-typegen": "wrangler types",
+		"init-db": "node scripts/init-db.js"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.6.4",
-		"@cloudflare/workers-types": "^4.20250224.0",
-		"typescript": "^5.5.2",
+		"@cloudflare/workers-types": "^4.20240208.0",
+		"typescript": "^5.0.4",
 		"vitest": "~2.1.9",
-		"wrangler": "^3.110.0"
+		"wrangler": "^3.0.0"
 	},
 	"dependencies": {
-		"itty-router": "^5.0.18",
-		"jose": "^6.0.7"
+		"itty-router": "^4.0.27",
+		"jose": "^5.2.2"
 	}
 }
