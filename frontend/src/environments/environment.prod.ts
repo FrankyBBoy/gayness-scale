@@ -4,10 +4,11 @@ export const environment = {
     domain: 'dev-7y1grk6neur7cepa.us.auth0.com',
     clientId: '1SUlgxNbRtrYEnhfeNexrC9rs13QgwoU',
     authorizationParams: {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}/callback`,
+      audience: 'https://gayness-scale-backend/'
     }
   },
   api: {
-    serverUrl: 'https://api.gayness-scale.app', // URL de production de votre Cloudflare Worker
+    serverUrl: 'https://api.gayness-scale.app'
   }
 }; 
