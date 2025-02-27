@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Suggestion {
@@ -42,6 +42,20 @@ export class SuggestionService {
       per_page: perPage.toString()
     };
     return this.http.get<PaginatedSuggestions>(this.apiUrl, { params });
+  }
+
+  getLatestSuggestions(limit: number = 10): Observable<Suggestion[]> {
+    const params = {
+      page: '1',
+      per_page: limit.toString(),
+      sort_by: 'created_at',
+      sort_order: 'desc'
+    };
+    
+    return this.http.get<PaginatedSuggestions>(this.apiUrl, { params })
+      .pipe(
+        map(response => response.items)
+      );
   }
 
   getUserSuggestions(userId: string, page: number = 1, perPage: number = 10): Observable<PaginatedSuggestions> {

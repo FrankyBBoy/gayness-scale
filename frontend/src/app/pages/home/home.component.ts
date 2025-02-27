@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SuggestionService, Suggestion } from '../../core/services/suggestion.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -12,6 +13,7 @@ import { SuggestionService, Suggestion } from '../../core/services/suggestion.se
 })
 export class HomeComponent implements OnInit {
   suggestions: Suggestion[] = [];
+  latestSuggestions: Suggestion[] = [];
   loading = true;
   error: string | null = null;
   currentPage = 1;
@@ -24,7 +26,31 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loadSuggestions();
+    this.loadData();
+  }
+
+  loadData() {
+    this.loading = true;
+    this.error = null;
+
+    // Utiliser forkJoin pour charger les deux ensembles de données en parallèle
+    forkJoin({
+      topSuggestions: this.suggestionService.getSuggestions(this.currentPage, this.pageSize),
+      latestSuggestions: this.suggestionService.getLatestSuggestions(10)
+    }).subscribe({
+      next: (results) => {
+        // Trier les suggestions par score ELO décroissant
+        this.suggestions = results.topSuggestions.items.sort((a, b) => b.elo_score - a.elo_score);
+        this.latestSuggestions = results.latestSuggestions;
+        this.totalPages = Math.ceil(results.topSuggestions.total / this.pageSize);
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = 'Failed to load suggestions. Please try again later.';
+        this.loading = false;
+        console.error('Error loading suggestions:', err);
+      }
+    });
   }
 
   loadSuggestions() {

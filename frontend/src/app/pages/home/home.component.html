@@ -49,6 +49,56 @@
       </div>
     </div>
 
+    <!-- Latest suggestions section -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+      <div class="px-4 py-5 sm:px-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Latest Suggestions</h3>
+        <p class="mt-1 max-w-2xl text-sm text-gray-500">Recently added suggestions from our community.</p>
+      </div>
+      <div class="border-t border-gray-200">
+        @if (loading) {
+          <div class="flex justify-center items-center h-32">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+          </div>
+        } @else if (error) {
+          <div class="p-4">
+            <div class="rounded-md bg-red-50 p-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <h3 class="text-sm font-medium text-red-800">{{ error }}</h3>
+                </div>
+              </div>
+            </div>
+          </div>
+        } @else if (latestSuggestions.length === 0) {
+          <div class="text-center py-6">
+            <p class="text-gray-500">No suggestions yet. Be the first to add one!</p>
+          </div>
+        } @else {
+          <ul role="list" class="divide-y divide-gray-200">
+            @for (suggestion of latestSuggestions; track suggestion.id) {
+              <li class="px-4 py-4 sm:px-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">{{ suggestion.description }}</p>
+                    <p class="text-xs text-gray-500 mt-1">Added on {{ suggestion.created_at | date:'medium' }}</p>
+                  </div>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    New
+                  </span>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+
     <!-- Call to action -->
     <div class="bg-indigo-700 rounded-lg shadow-xl overflow-hidden">
       <div class="px-4 py-5 sm:p-6">
