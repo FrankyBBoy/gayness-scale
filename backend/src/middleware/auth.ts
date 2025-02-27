@@ -47,12 +47,17 @@ async function getJWKS(domain: string) {
 
 export async function authMiddleware(request: Request): Promise<AuthContext> {
   try {
+    console.log("Auth middleware called for:", new URL(request.url).pathname);
+    
     const authHeader = request.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
+      console.log("No valid Authorization header found");
       return { isAuthenticated: false };
     }
 
     const domain = request.headers.get('x-auth0-domain') || 'dev-7y1grk6neur7cepa.us.auth0.com';
+    console.log("Using Auth0 domain:", domain);
+    
     const JWKS = await getJWKS(domain);
     
     if (!JWKS) {
@@ -61,20 +66,28 @@ export async function authMiddleware(request: Request): Promise<AuthContext> {
     }
 
     const token = authHeader.split(' ')[1];
-    const { payload } = await jwtVerify(token, JWKS, {
-      issuer: `https://${domain}/`,
-      audience: 'https://gayness-scale-backend/',
-    });
+    console.log("Token found, length:", token.length);
+    
+    try {
+      const { payload } = await jwtVerify(token, JWKS, {
+        issuer: `https://${domain}/`,
+        audience: 'https://gayness-scale-backend/',
+      });
 
-    return {
-      user: {
-        sub: payload.sub as string,
-        email: payload.email as string,
-      },
-      isAuthenticated: true
-    };
+      console.log("Token verified successfully for user:", payload.sub);
+      return {
+        user: {
+          sub: payload.sub as string,
+          email: payload.email as string,
+        },
+        isAuthenticated: true
+      };
+    } catch (verifyError) {
+      console.error('Token verification failed:', verifyError);
+      return { isAuthenticated: false };
+    }
   } catch (error) {
-    console.error('Auth error:', error);
+    console.error('Auth middleware error:', error);
     return { isAuthenticated: false };
   }
 } 

@@ -8,7 +8,5 @@ export const environment = {
       audience: 'https://gayness-scale-backend/'
     }
   },
-  api: {
-    serverUrl: 'http://localhost:8787', // URL de votre Cloudflare Worker en développement
-  }
+  apiUrl: 'http://localhost:8787'
 }; 

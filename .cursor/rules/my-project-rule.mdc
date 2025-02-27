@@ -1,0 +1,85 @@
+---
+description: gayness-scale-rules
+globs: 
+alwaysApply: true
+---
+# Context
+- We are in February 2025
+- The project is a web application called "Gayness Scale" that allows users to submit and vote on suggestions
+
+# Environment
+- The backend application is in the backend folder
+- The frontend application is in the frontend folder
+- The commands are executed in PowerShell
+- The backend is deployed on Cloudflare Workers with D1 Database
+- The frontend is deployed on a static hosting platform
+
+# Frontend
+- The frontend is implemented with Angular 19
+- Uses Auth0 for authentication
+- Features modern UI with Tailwind CSS
+- Implements lazy loading for all routes
+- Uses standalone components architecture
+
+# Backend
+- Built with Cloudflare Workers
+- Uses D1 Database (SQLite) for data storage
+- Implements RESTful API endpoints
+- Uses Auth0 for user authentication validation
+
+# Features
+## Authentication
+- Login/Logout via Auth0
+- User profile synchronization with backend
+- Protected routes and API endpoints
+- Token-based authentication with interceptors
+
+## User Management
+- User profile creation and updates
+- Daily limits tracking for votes and suggestions
+- Profile statistics and activity history
+- Remaining votes/suggestions counter
+
+## Suggestions
+- Public listing of suggestions
+- Creation of new suggestions (authenticated users)
+- Daily limit of 5 suggestions per user
+- User's suggestions history in profile
+
+## Voting System
+- Vote up/down on suggestions
+- ELO rating system for suggestion ranking
+- Daily limit of 10 votes per user
+- Vote history tracking
+- Protection against self-voting
+
+## Data Management
+- Pagination for all listings
+- Error handling and loading states
+- Optimistic updates for better UX
+- Cross-device synchronization
+
+# Technical Details
+## Database Schema
+- Users table: tracks user data and daily limits
+- Suggestions table: stores suggestions with ELO scores
+- Votes table: records user votes and timestamps
+
+## API Endpoints
+- `/api/users`: user management
+- `/api/suggestions`: suggestion CRUD operations
+- `/api/votes`: voting operations
+- Public and protected routes separation
+
+## Security
+- Auth0 integration for secure authentication
+- JWT token validation
+- CORS configuration
+- Rate limiting on API endpoints
+- User data protection
+
+## Performance
+- Lazy loading of components
+- Efficient database queries
+- Optimized API responses
+- Client-side caching strategies

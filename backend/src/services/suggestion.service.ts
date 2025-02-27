@@ -86,4 +86,35 @@ export class SuggestionService {
       total: countResult?.count || 0
     };
   }
+
+  async getRandomPairForVoting(userId: string): Promise<{ pair: Suggestion[]; remainingCount: number }> {
+    // Get suggestions not voted by the user
+    const result = await this.db
+      .prepare(`
+        SELECT s.* 
+        FROM suggestions s
+        LEFT JOIN votes v ON s.id = v.suggestion_id AND v.user_id = ?
+        WHERE v.id IS NULL
+        ORDER BY RANDOM()
+        LIMIT 2
+      `)
+      .bind(userId)
+      .all<Suggestion>();
+
+    // Get total count of remaining suggestions to vote on
+    const countResult = await this.db
+      .prepare(`
+        SELECT COUNT(*) as count 
+        FROM suggestions s
+        LEFT JOIN votes v ON s.id = v.suggestion_id AND v.user_id = ?
+        WHERE v.id IS NULL
+      `)
+      .bind(userId)
+      .first<{ count: number }>();
+
+    return {
+      pair: result.results,
+      remainingCount: countResult?.count || 0
+    };
+  }
 } 

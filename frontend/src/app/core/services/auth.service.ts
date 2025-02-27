@@ -1,111 +1,69 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { AuthService as Auth0Service } from '@auth0/auth0-angular';
-import { Observable, Subject } from 'rxjs';
-import { map, tap, takeUntil, distinctUntilChanged, shareReplay, filter } from 'rxjs/operators';
-import { HttpClient } from '@angular/common/http';
+import { Observable, from, map, catchError, of, tap } from 'rxjs';
+import { User } from './user.service';
+import { User as Auth0User } from '@auth0/auth0-spa-js';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
-export class AuthService implements OnDestroy {
-  private destroy$ = new Subject<void>();
-  private isAuthenticated: Observable<boolean>;
-  private userProfile: Observable<any>;
+export class AuthService {
+  constructor(private auth0: Auth0Service) {}
 
-  constructor(
-    private auth0: Auth0Service,
-    private http: HttpClient
-  ) {
-    // Initialize streams
-    this.isAuthenticated = this.auth0.isAuthenticated$.pipe(
-      distinctUntilChanged(),
-      tap(isAuthenticated => console.log('Auth service - Is authenticated:', isAuthenticated)),
-      shareReplay(1),
-      takeUntil(this.destroy$)
-    );
-
-    this.userProfile = this.auth0.user$.pipe(
-      distinctUntilChanged(),
-      tap(user => {
-        console.log('Auth service - User profile:', user);
-        if (user) {
-          this.syncUserWithBackend(user);
-        }
-      }),
-      shareReplay(1),
-      takeUntil(this.destroy$)
-    );
-
-    // Subscribe to authentication errors
-    this.auth0.error$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(
-      error => console.error('Auth service - Error:', error)
-    );
+  login(): Observable<void> {
+    return from(this.auth0.loginWithRedirect({
+      appState: { target: window.location.pathname }
+    }));
   }
 
-  private syncUserWithBackend(user: any): void {
-    if (!user) return;
-
-    this.http.post(`${environment.api.serverUrl}/api/users/sync`, {
-      id: user.sub,
-      email: user.email,
-      name: user.name
-    }).pipe(
-      takeUntil(this.destroy$)
-    ).subscribe({
-      next: () => console.log('User synced with backend'),
-      error: (error) => console.error('Error syncing user with backend:', error)
-    });
-  }
-
-  get isAuthenticated$(): Observable<boolean> {
-    return this.isAuthenticated;
-  }
-
-  get user$() {
-    return this.userProfile;
-  }
-
-  get userRole$(): Observable<string> {
-    return this.user$.pipe(
-      map(user => user?.['https://gayness-scale.app/role'] || 'standard')
-    );
-  }
-
-  get dailyVotesCount$(): Observable<number> {
-    return this.user$.pipe(
-      map(user => user?.['https://gayness-scale.app/daily_votes_count'] || 0)
-    );
-  }
-
-  get dailySuggestionsCount$(): Observable<number> {
-    return this.user$.pipe(
-      map(user => user?.['https://gayness-scale.app/daily_suggestions_count'] || 0)
-    );
-  }
-
-  login(): void {
-    console.log('Auth service - Starting login process');
-    this.auth0.loginWithRedirect({
-      appState: { target: window.location.pathname },
-      authorizationParams: {
-        scope: 'openid profile email'
-      }
-    });
-  }
-
-  logout(): void {
-    this.auth0.logout({
+  logout(): Observable<void> {
+    return from(this.auth0.logout({
       logoutParams: {
         returnTo: window.location.origin
       }
-    });
+    }));
   }
 
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
+  isAuthenticated(): Observable<boolean> {
+    return this.auth0.isAuthenticated$.pipe(
+      tap(isAuth => console.log('Is authenticated:', isAuth))
+    );
+  }
+
+  getUser(): Observable<User | null | undefined> {
+    return this.auth0.user$.pipe(
+      tap(user => console.log('Auth0 user:', user)),
+      map((auth0User: Auth0User | null | undefined) => {
+        if (!auth0User) return auth0User;
+        return {
+          id: auth0User.sub || '',
+          email: auth0User.email || '',
+          daily_votes_count: 0,
+          daily_suggestions_count: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      }),
+      catchError(error => {
+        console.error('Error getting user:', error);
+        return of(null);
+      })
+    );
+  }
+
+  getAccessToken(): Observable<string> {
+    console.log('Getting access token...');
+    return from(this.auth0.getAccessTokenSilently({
+      authorizationParams: {
+        audience: environment.auth0.authorizationParams.audience
+      }
+    })).pipe(
+      tap(token => console.log('Got access token:', token ? `${token.substring(0, 10)}...` : 'none')),
+      catchError(error => {
+        console.error('Error getting access token:', error);
+        return of('');
+      })
+    );
   }
 }

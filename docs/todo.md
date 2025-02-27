@@ -162,4 +162,146 @@
 - [ ] Amélioration de l'algorithme de matching
 - [ ] Système de badges/récompenses
 - [ ] Dashboard admin
-- [ ] Export des données 
+- [ ] Export des données
+
+## 9. Refonte du système de vote
+
+### Backend
+- [x] Modifier le service de suggestions
+  - [x] Ajouter une méthode pour récupérer 2 suggestions aléatoires
+  - [x] Exclure les suggestions déjà votées par l'utilisateur
+  - [x] Optimiser la requête pour éviter les doublons
+
+- [x] Modifier le service de votes
+  - [x] Adapter l'algorithme ELO pour le système de comparaison directe
+  - [x] Mettre à jour la méthode de création de vote pour gérer la comparaison
+  - [x] Ajouter la logique de tracking des suggestions déjà vues
+
+### Frontend
+- [x] Mettre à jour le composant de vote
+  - [x] Modifier l'interface pour afficher 2 suggestions côte à côte
+  - [x] Implémenter la logique de sélection d'une suggestion
+  - [x] Ajouter des animations de transition entre les paires
+  - [x] Gérer l'état de chargement et les erreurs
+
+- [x] Mettre à jour le service de vote
+  - [x] Adapter les méthodes pour le nouveau format de vote
+  - [x] Gérer le cache local des votes effectués
+  - [x] Optimiser les requêtes pour minimiser la latence
+
+### Base de données
+- [x] Créer la migration pour le nouveau système
+  - [x] Ajouter la colonne elo_score aux suggestions
+  - [x] Modifier la structure de la table votes
+  - [x] Ajouter les contraintes de clés étrangères
+
+### Tests
+- [ ] Tests unitaires
+  - [ ] Tester la sélection aléatoire des suggestions
+  - [ ] Tester le nouvel algorithme ELO
+  - [ ] Tester la logique de comparaison
+
+- [ ] Tests d'intégration
+  - [ ] Tester le flux complet de vote
+  - [ ] Vérifier la mise à jour des scores
+  - [ ] Valider la non-répétition des suggestions
+
+### Prochaines étapes
+- [ ] Optimiser les performances
+  - [ ] Ajouter des index sur les colonnes fréquemment utilisées
+  - [ ] Mettre en cache les paires de suggestions
+  - [ ] Optimiser les requêtes SQL
+
+- [ ] Améliorer l'expérience utilisateur
+  - [ ] Ajouter des statistiques sur les votes
+  - [ ] Afficher l'historique des votes
+  - [ ] Ajouter des animations plus fluides
+
+## 10. Tests
+
+### Backend
+- [ ] Tests unitaires des services
+- [ ] Tests d'intégration des endpoints
+- [ ] Tests de l'algorithme Elo
+
+### Frontend
+- [ ] Tests unitaires des services
+- [ ] Tests des components
+- [ ] Tests E2E avec Cypress
+
+## 11. Déploiement
+
+### Backend (Cloudflare)
+- [ ] Configuration des variables d'environnement
+- [ ] Déploiement de la base D1
+- [ ] Déploiement du Worker
+- [ ] Configuration des routes et DNS
+
+### Frontend (Cloudflare Pages)
+- [ ] Configuration du build
+- [ ] Configuration des variables d'environnement
+- [ ] Déploiement
+- [ ] Configuration du domaine personnalisé
+
+## 12. Post-déploiement
+
+### Monitoring et Analytics
+- [ ] Mise en place du monitoring
+- [ ] Configuration des analytics
+- [ ] Mise en place des alertes
+
+### Documentation
+- [ ] Documentation API
+- [ ] Documentation technique
+- [ ] Guide d'utilisation
+
+### Sécurité
+- [ ] Audit de sécurité
+- [ ] Tests de charge
+- [ ] Configuration CORS
+- [ ] Rate limiting
+
+## 13. Optimisations futures potentielles
+
+- [ ] Cache des résultats
+- [ ] Optimisation des requêtes
+- [ ] Amélioration de l'algorithme de matching
+- [ ] Système de badges/récompenses
+- [ ] Dashboard admin
+- [ ] Export des données
+
+## 14. Refonte du système de vote
+
+### Backend
+- [ ] Modifier le service de suggestions
+  - [ ] Ajouter une méthode pour récupérer 2 suggestions aléatoires
+  - [ ] Exclure les suggestions déjà votées par l'utilisateur
+  - [ ] Optimiser la requête pour éviter les doublons
+
+- [ ] Modifier le service de votes
+  - [ ] Adapter l'algorithme ELO pour le système de comparaison directe
+  - [ ] Mettre à jour la méthode de création de vote pour gérer la comparaison
+  - [ ] Ajouter la logique de tracking des suggestions déjà vues
+
+### Frontend
+- [ ] Mettre à jour le composant de vote
+  - [ ] Modifier l'interface pour afficher 2 suggestions côte à côte
+  - [ ] Implémenter la logique de sélection d'une suggestion
+  - [ ] Ajouter des animations de transition entre les paires
+  - [ ] Gérer l'état de chargement et les erreurs
+
+- [ ] Mettre à jour le service de vote
+  - [ ] Adapter les méthodes pour le nouveau format de vote
+  - [ ] Gérer le cache local des votes effectués
+  - [ ] Optimiser les requêtes pour minimiser la latence
+
+### Tests
+- [ ] Tests unitaires
+  - [ ] Tester la sélection aléatoire des suggestions
+  - [ ] Tester le nouvel algorithme ELO
+  - [ ] Tester la logique de comparaison
+
+- [ ] Tests d'intégration
+  - [ ] Tester le flux complet de vote
+  - [ ] Vérifier la mise à jour des scores
+  - [ ] Valider la non-répétition des suggestions 

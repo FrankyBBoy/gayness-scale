@@ -2,64 +2,82 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VoteService } from '../../core/services/vote.service';
 import { SuggestionService, Suggestion } from '../../core/services/suggestion.service';
-import { UserService, User } from '../../core/services/user.service';
-import { Observable, of } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { UserService } from '../../core/services/user.service';
+import { AuthService } from '../../core/services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-vote',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-      <div class="px-4 py-6 sm:px-0">
-        <div class="border-4 border-dashed border-gray-200 rounded-lg p-4">
-          <h2 class="text-2xl font-bold mb-4">Vote on Suggestions</h2>
-          
+    <div class="min-h-screen bg-gray-50 py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto">
           @if (loading) {
-            <div class="flex justify-center items-center h-64">
-              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+            <div class="flex justify-center items-center min-h-[400px]">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>
           } @else if (error) {
             <div class="bg-red-50 border-l-4 border-red-400 p-4">
               <div class="flex">
                 <div class="flex-shrink-0">
                   <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                   </svg>
                 </div>
                 <div class="ml-3">
                   <p class="text-sm text-red-700">{{ error }}</p>
+                  @if (!isAuthenticated) {
+                    <button
+                      (click)="login()"
+                      class="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Log in to vote
+                    </button>
+                  }
                 </div>
               </div>
             </div>
-          } @else if (currentSuggestions.length === 0) {
-            <div class="text-center py-12">
-              <p class="text-gray-500">No more suggestions to vote on today. Come back tomorrow!</p>
+          } @else if (!currentPair) {
+            <div class="text-center">
+              <h3 class="text-lg font-medium text-gray-900">No more suggestions to vote on</h3>
+              <p class="mt-1 text-sm text-gray-500">Please come back later or add your own suggestions!</p>
             </div>
           } @else {
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              @for (suggestion of currentSuggestions; track suggestion.id) {
-                <div class="bg-white overflow-hidden shadow rounded-lg">
-                  <div class="px-4 py-5 sm:p-6">
-                    <p class="text-gray-900">{{ suggestion.description }}</p>
-                    <div class="mt-4 flex justify-between">
-                      <button
-                        (click)="voteForSuggestion(suggestion.id, 1)"
-                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                      >
-                        Vote Up
-                      </button>
-                      <button
-                        (click)="voteForSuggestion(suggestion.id, 0)"
-                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        Vote Down
-                      </button>
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+              <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Choose the gayer option</h3>
+                <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <button
+                    (click)="vote(currentPair[0], currentPair[1])"
+                    class="relative block w-full rounded-lg p-6 bg-white border border-gray-300 shadow-sm space-y-3 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    <div class="flex items-center space-x-3">
+                      <h3 class="text-sm font-medium text-gray-900">
+                        {{ currentPair[0].description }}
+                      </h3>
                     </div>
-                  </div>
+                    <div class="text-sm text-gray-500">
+                      ELO: {{ currentPair[0].elo_score }}
+                    </div>
+                  </button>
+
+                  <button
+                    (click)="vote(currentPair[1], currentPair[0])"
+                    class="relative block w-full rounded-lg p-6 bg-white border border-gray-300 shadow-sm space-y-3 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    <div class="flex items-center space-x-3">
+                      <h3 class="text-sm font-medium text-gray-900">
+                        {{ currentPair[1].description }}
+                      </h3>
+                    </div>
+                    <div class="text-sm text-gray-500">
+                      ELO: {{ currentPair[1].elo_score }}
+                    </div>
+                  </button>
                 </div>
-              }
+              </div>
             </div>
           }
         </div>
@@ -69,71 +87,93 @@ import { switchMap } from 'rxjs/operators';
   styles: []
 })
 export class VoteComponent implements OnInit {
-  currentSuggestions: Suggestion[] = [];
+  currentPair: [Suggestion, Suggestion] | null = null;
   loading = true;
   error: string | null = null;
-  votingEnabled = false;
-  remainingVotes = 0;
-  currentUser: User | null = null;
-  currentPage = 1;
-  pageSize = 10;
+  remainingCount = 0;
+  isAuthenticated = false;
 
   constructor(
     private voteService: VoteService,
     private suggestionService: SuggestionService,
-    private userService: UserService
+    private userService: UserService,
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit() {
-    this.loadUserAndSuggestions();
+    console.log('Vote component initialized');
+    this.authService.isAuthenticated().subscribe(
+      isAuthenticated => {
+        console.log('Authentication status in component:', isAuthenticated);
+        this.isAuthenticated = isAuthenticated;
+        if (isAuthenticated) {
+          this.authService.getAccessToken().subscribe(token => {
+            console.log('Token received in component:', token ? 'yes' : 'no');
+            this.loadRandomPair();
+          });
+        } else {
+          this.error = 'Please log in to vote';
+          this.loading = false;
+        }
+      }
+    );
   }
 
-  loadUserAndSuggestions(): void {
+  login() {
+    this.authService.login().subscribe();
+  }
+
+  private loadRandomPair() {
     this.loading = true;
     this.error = null;
 
-    this.userService.getCurrentUser().pipe(
-      switchMap(user => {
-        this.currentUser = user;
-        this.votingEnabled = this.userService.canVoteToday(user);
-        this.remainingVotes = this.userService.getRemainingVotes(user);
-        
-        if (!this.votingEnabled) {
-          return of(null);
-        }
-        
-        return this.suggestionService.getSuggestions(this.currentPage, this.pageSize);
-      })
-    ).subscribe({
-      next: (response) => {
-        if (response) {
-          this.currentSuggestions = response.items;
-        }
+    console.log('Loading random pair...');
+    this.suggestionService.getRandomPair().subscribe({
+      next: response => {
+        console.log('Random pair loaded:', response);
+        this.currentPair = response.pair;
+        this.remainingCount = response.remainingCount;
         this.loading = false;
       },
-      error: (err) => {
-        this.error = 'Failed to load voting data. Please try again later.';
+      error: err => {
+        console.error('Error loading random pair:', err);
+        if (err.status === 401) {
+          this.error = 'Please log in to vote';
+          this.isAuthenticated = false;
+        } else {
+          this.error = 'Failed to load suggestions. Please try again later.';
+        }
         this.loading = false;
-        console.error('Error loading voting data:', err);
       }
     });
   }
 
-  async voteForSuggestion(suggestionId: number, score: number) {
-    if (!this.votingEnabled || !this.currentUser) {
+  vote(winner: Suggestion, loser: Suggestion) {
+    if (!this.isAuthenticated) {
+      this.error = 'Please log in to vote';
       return;
     }
 
-    try {
-      await this.voteService.createVote(suggestionId, score).toPromise();
-      this.currentSuggestions = this.currentSuggestions.filter(s => s.id !== suggestionId);
-      
-      if (this.currentSuggestions.length === 0) {
-        this.loadUserAndSuggestions();
+    this.loading = true;
+    this.error = null;
+
+    this.voteService.createVote(winner.id, loser.id).subscribe({
+      next: () => {
+        this.loadRandomPair();
+      },
+      error: err => {
+        console.error('Error creating vote:', err);
+        if (err.status === 429) {
+          this.error = 'You have reached your daily voting limit. Please try again tomorrow.';
+        } else if (err.status === 401) {
+          this.error = 'Please log in to vote';
+          this.isAuthenticated = false;
+        } else {
+          this.error = 'Failed to submit vote. Please try again later.';
+        }
+        this.loading = false;
       }
-    } catch (err) {
-      this.error = 'Failed to submit vote. Please try again later.';
-      console.error('Error submitting vote:', err);
-    }
+    });
   }
 } 

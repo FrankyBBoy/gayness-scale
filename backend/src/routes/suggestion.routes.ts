@@ -27,6 +27,33 @@ export function createSuggestionRouter() {
     }
   });
 
+  // Get random pair for voting (protected)
+  router.get('/random-pair', async (request: Request, env: Env, ctx: AuthContext) => {
+    console.log("Random pair route called, auth context:", ctx);
+    
+    if (!ctx?.user) {
+      console.error("No user in auth context, returning 401");
+      return error('Unauthorized', 401);
+    }
+
+    try {
+      console.log("Getting random pair for user:", ctx.user.sub);
+      const suggestionService = new SuggestionService(env.DB);
+      const result = await suggestionService.getRandomPairForVoting(ctx.user.sub);
+
+      if (result.pair.length < 2) {
+        console.log("Not enough suggestions available for voting");
+        return error('Not enough suggestions available for voting', 404);
+      }
+
+      console.log(`Random pair found: ${result.pair.length} suggestions, remaining: ${result.remainingCount}`);
+      return json(result);
+    } catch (e) {
+      console.error('Error getting random pair:', e);
+      return error('Internal Server Error', 500);
+    }
+  });
+
   // Get suggestion by ID (public)
   router.get('/:id', async (request: IRequest, env: Env) => {
     try {

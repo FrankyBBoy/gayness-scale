@@ -10,23 +10,27 @@ interface Env {
 export function createVoteRouter() {
   const router = Router({ base: '/api/votes' });
 
-  // Create a new vote
+  // Create vote (protected)
   router.post('/', async (request: Request, env: Env, ctx: AuthContext) => {
     if (!ctx?.user) {
       return error('Unauthorized', 401);
     }
 
     try {
-      const { suggestion_id, score } = await request.json<{ suggestion_id: number; score: number }>();
+      const { winner_id, loser_id } = await request.json<{ winner_id: number; loser_id: number }>();
 
-      if (!suggestion_id || typeof score !== 'number') {
-        return error('Invalid request body', 400);
+      if (!winner_id || !loser_id) {
+        return error('Both winner_id and loser_id are required', 400);
+      }
+
+      if (winner_id === loser_id) {
+        return error('Cannot vote on the same suggestion', 400);
       }
 
       const voteService = new VoteService(env.DB);
       
       try {
-        const vote = await voteService.createVote(ctx.user.sub, suggestion_id, score);
+        const vote = await voteService.createVote(ctx.user.sub, winner_id, loser_id);
         return json(vote, 201);
       } catch (e) {
         if (e instanceof Error && e.message === 'Daily vote limit reached') {
@@ -40,7 +44,7 @@ export function createVoteRouter() {
     }
   });
 
-  // Get user's votes
+  // Get user votes (protected)
   router.get('/user/:id', async (request: IRequest, env: Env, ctx: AuthContext) => {
     if (!ctx?.user) {
       return error('Unauthorized', 401);
@@ -48,19 +52,11 @@ export function createVoteRouter() {
 
     try {
       const { id } = request.params;
-      const decodedId = decodeURIComponent(id);
-      
-      // Users can only view their own votes
-      if (decodedId !== ctx.user.sub) {
-        return error('Forbidden', 403);
-      }
-
-      const url = new URL(request.url);
-      const page = parseInt(url.searchParams.get('page') || '1');
-      const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
+      const page = parseInt(request.query?.page as string || '1');
+      const limit = parseInt(request.query?.limit as string || '10');
 
       const voteService = new VoteService(env.DB);
-      const votes = await voteService.getUserVotes(decodedId, page, pageSize);
+      const votes = await voteService.getUserVotes(id, page, limit);
 
       return json(votes);
     } catch (e) {

@@ -1,65 +1,44 @@
-import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { from, switchMap, catchError, throwError } from 'rxjs';
-import { AuthService as Auth0Service } from '@auth0/auth0-angular';
+import { HttpInterceptorFn, HttpRequest, HttpHandlerFn } from '@angular/common/http';
+import { Observable, switchMap, tap } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 import { environment } from '../../../environments/environment';
 
-// List of public endpoints that don't require authentication
-const PUBLIC_ENDPOINTS = [
-  '/api/suggestions'
-];
+export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
+  const auth = inject(AuthService);
 
-export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const auth0 = inject(Auth0Service);
-
-  // Only intercept requests to our API
-  if (!req.url.startsWith(environment.api.serverUrl)) {
+  // Skip if not calling our API
+  if (!req.url.startsWith(environment.apiUrl)) {
     return next(req);
   }
 
-  // Check if this is a public endpoint (only GET requests to /api/suggestions)
-  const isPublicEndpoint = req.method === 'GET' && PUBLIC_ENDPOINTS.some(endpoint => 
-    req.url.includes(`${environment.api.serverUrl}${endpoint}`)
-  );
+  // Skip if public endpoint (only GET /api/suggestions is public for listing)
+  const isPublicEndpoint = req.url.startsWith(`${environment.apiUrl}/api/suggestions`) &&
+                           !req.url.includes('/random-pair') &&
+                           req.method === 'GET';
 
   if (isPublicEndpoint) {
+    console.log('Public endpoint, skipping auth:', req.url);
     return next(req);
   }
 
   console.log('Intercepting request to:', req.url);
   
-  // Check if the user is authenticated
-  return auth0.isAuthenticated$.pipe(
-    switchMap(isAuthenticated => {
-      if (!isAuthenticated) {
-        console.log('User is not authenticated, skipping token fetch');
-        return throwError(() => new Error('User not authenticated'));
+  // Add auth header
+  return auth.getAccessToken().pipe(
+    tap(token => console.log('Got token:', token ? 'yes (length: ' + token.length + ')' : 'no')),
+    switchMap(token => {
+      if (token) {
+        const authReq = req.clone({
+          headers: req.headers
+            .set('Authorization', `Bearer ${token}`)
+            .set('x-auth0-domain', environment.auth0.domain)
+        });
+        console.log('Added auth headers to request');
+        return next(authReq);
       }
-
-      console.log('User is authenticated, getting token...');
-      return from(auth0.getAccessTokenSilently({
-        authorizationParams: {
-          audience: environment.auth0.authorizationParams.audience
-        }
-      })).pipe(
-        switchMap(token => {
-          console.log('Token received, adding to headers');
-          const authReq = req.clone({
-            headers: req.headers
-              .set('Authorization', `Bearer ${token}`)
-              .set('x-auth0-domain', environment.auth0.domain)
-          });
-          return next(authReq);
-        }),
-        catchError(error => {
-          console.error('Error getting access token:', error);
-          return throwError(() => error);
-        })
-      );
-    }),
-    catchError(error => {
-      console.error('Error in auth interceptor:', error);
-      return throwError(() => error);
+      console.log('No token available, sending request without auth');
+      return next(req);
     })
   );
 }; 

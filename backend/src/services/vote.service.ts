@@ -3,12 +3,13 @@ import { Suggestion } from './suggestion.service';
 
 const MAX_DAILY_VOTES = 10;
 const K_FACTOR = 32; // ELO K-factor, determines how much ratings change
+const DEFAULT_ELO = 1500; // Default ELO score for new suggestions
 
 export interface Vote {
   id: number;
-  suggestion_id: number;
+  winner_id: number;
+  loser_id: number;
   user_id: string;
-  score: number;
   created_at: string;
   updated_at: string;
 }
@@ -16,142 +17,107 @@ export interface Vote {
 export class VoteService {
   constructor(private db: D1Database) {}
 
-  private calculateEloChange(score: number): number {
-    // Convert 0-100 score to win probability (0.0 to 1.0)
-    return score / 100;
-  }
-
-  private async updateEloScore(suggestionId: number, score: number): Promise<void> {
-    const expectedScore = 0.5; // Expected score in ELO is 0.5 (50%)
-    const actualScore = this.calculateEloChange(score);
+  private async getSuggestionElo(suggestionId: number): Promise<number> {
+    const result = await this.db
+      .prepare('SELECT elo_score FROM suggestions WHERE id = ?')
+      .bind(suggestionId)
+      .first<{ elo_score: number }>();
     
-    // Calculate ELO change
-    const change = Math.round(K_FACTOR * (actualScore - expectedScore));
+    return result?.elo_score || DEFAULT_ELO;
+  }
 
-    // Update suggestion's ELO score
+  private calculateEloChange(winnerElo: number, loserElo: number): { winnerChange: number; loserChange: number } {
+    const expectedWinnerScore = 1 / (1 + Math.pow(10, (loserElo - winnerElo) / 400));
+    const change = Math.round(K_FACTOR * (1 - expectedWinnerScore));
+
+    return {
+      winnerChange: change,
+      loserChange: -change
+    };
+  }
+
+  private async updateEloScores(winnerId: number, loserId: number): Promise<void> {
+    const winnerElo = await this.getSuggestionElo(winnerId);
+    const loserElo = await this.getSuggestionElo(loserId);
+    
+    const { winnerChange, loserChange } = this.calculateEloChange(winnerElo, loserElo);
+
+    // Update winner's ELO
     await this.db
-      .prepare(
-        `UPDATE suggestions 
-         SET elo_score = elo_score + ?,
-             updated_at = CURRENT_TIMESTAMP
-         WHERE id = ?`
-      )
-      .bind(change, suggestionId)
+      .prepare('UPDATE suggestions SET elo_score = ? WHERE id = ?')
+      .bind(winnerElo + winnerChange, winnerId)
+      .run();
+
+    // Update loser's ELO
+    await this.db
+      .prepare('UPDATE suggestions SET elo_score = ? WHERE id = ?')
+      .bind(loserElo + loserChange, loserId)
       .run();
   }
 
-  private async checkAndUpdateDailyLimit(userId: string): Promise<boolean> {
+  async createVote(userId: string, winnerId: number, loserId: number): Promise<Vote> {
+    // Check daily vote limit
     const today = new Date().toISOString().split('T')[0];
+    const voteCount = await this.db
+      .prepare('SELECT COUNT(*) as count FROM votes WHERE user_id = ? AND DATE(created_at) = ?')
+      .bind(userId, today)
+      .first<{ count: number }>();
 
-    const user = await this.db
-      .prepare(
-        `SELECT daily_votes_count, last_vote_date
-         FROM users 
-         WHERE id = ?`
-      )
-      .bind(userId)
-      .first<User>();
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    // Reset count if it's a new day
-    if (user.last_vote_date !== today) {
-      await this.db
-        .prepare(
-          `UPDATE users 
-           SET daily_votes_count = 1,
-               last_vote_date = ?
-           WHERE id = ?`
-        )
-        .bind(today, userId)
-        .run();
-      return true;
-    }
-
-    // Check if user has reached daily limit
-    if (user.daily_votes_count >= MAX_DAILY_VOTES) {
-      return false;
-    }
-
-    // Increment vote count
-    await this.db
-      .prepare(
-        `UPDATE users 
-         SET daily_votes_count = daily_votes_count + 1
-         WHERE id = ?`
-      )
-      .bind(userId)
-      .run();
-
-    return true;
-  }
-
-  async createVote(userId: string, suggestionId: number, score: number): Promise<Vote> {
-    // Validate score range
-    if (score < 0 || score > 100) {
-      throw new Error('Score must be between 0 and 100');
-    }
-
-    // Check daily limit
-    const canVote = await this.checkAndUpdateDailyLimit(userId);
-    if (!canVote) {
+    if (voteCount && voteCount.count >= MAX_DAILY_VOTES) {
       throw new Error('Daily vote limit reached');
     }
 
     // Start transaction
     const now = new Date().toISOString();
     
-    // Create vote
-    const vote = await this.db
-      .prepare(
-        `INSERT INTO votes (suggestion_id, user_id, score, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?)
-         RETURNING *`
-      )
-      .bind(suggestionId, userId, score, now, now)
-      .first<Vote>();
+    try {
+      // Create vote record
+      const vote = await this.db
+        .prepare(
+          `INSERT INTO votes (winner_id, loser_id, user_id, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?)
+           RETURNING *`
+        )
+        .bind(winnerId, loserId, userId, now, now)
+        .first<Vote>();
 
-    if (!vote) {
-      throw new Error('Failed to create vote');
+      if (!vote) {
+        throw new Error('Failed to create vote');
+      }
+
+      // Update ELO scores
+      await this.updateEloScores(winnerId, loserId);
+
+      return vote;
+    } catch (error) {
+      console.error('Error in createVote:', error);
+      throw error;
     }
-
-    // Update suggestion's ELO score
-    await this.updateEloScore(suggestionId, score);
-
-    return vote;
   }
 
-  async getUserVotes(userId: string, page = 1, pageSize = 10): Promise<{ votes: Vote[]; total: number }> {
-    const offset = (page - 1) * pageSize;
+  async getUserVotes(userId: string, page: number = 1, limit: number = 10): Promise<{ items: Vote[]; total: number }> {
+    const offset = (page - 1) * limit;
 
-    const [votes, countResult] = await Promise.all([
-      this.db
-        .prepare(
-          `SELECT * FROM votes 
-           WHERE user_id = ? 
-           ORDER BY created_at DESC 
-           LIMIT ? OFFSET ?`
-        )
-        .bind(userId, pageSize, offset)
-        .all<Vote>(),
-      this.db
-        .prepare('SELECT COUNT(*) as total FROM votes WHERE user_id = ?')
-        .bind(userId)
-        .first<{ total: number }>(),
-    ]);
+    const countResult = await this.db
+      .prepare('SELECT COUNT(*) as count FROM votes WHERE user_id = ?')
+      .bind(userId)
+      .first<{ count: number }>();
+
+    const votes = await this.db
+      .prepare('SELECT * FROM votes WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?')
+      .bind(userId, limit, offset)
+      .all<Vote>();
 
     return {
-      votes: votes.results,
-      total: countResult?.total || 0,
+      items: votes.results,
+      total: countResult?.count || 0
     };
   }
 
   async getVotesBySuggestion(suggestionId: number): Promise<Vote[]> {
     const result = await this.db
-      .prepare('SELECT * FROM votes WHERE suggestion_id = ? ORDER BY created_at DESC')
-      .bind(suggestionId)
+      .prepare('SELECT * FROM votes WHERE winner_id = ? OR loser_id = ? ORDER BY created_at DESC')
+      .bind(suggestionId, suggestionId)
       .all<Vote>();
 
     return result.results;

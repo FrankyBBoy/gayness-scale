@@ -50,14 +50,20 @@ export default {
 
 			// Protected routes middleware
 			router.all('/api/*', async (request: Request, env: Env) => {
-				// Skip auth only for GET /api/suggestions
+				// Skip auth only for GET /api/suggestions (but not /api/suggestions/random-pair)
 				const url = new URL(request.url);
-				if (request.method === 'GET' && (url.pathname === '/api/suggestions' || url.pathname.startsWith('/api/suggestions/'))) {
+				// Public endpoint: GET /api/suggestions for listing
+				if (request.method === 'GET' && (
+					url.pathname === '/api/suggestions' || 
+					(url.pathname.startsWith('/api/suggestions/') && 
+					 !url.pathname.includes('/random-pair'))
+				)) {
 					return null;
 				}
 
 				const authResult = await authMiddleware(request);
 				if (!authResult.isAuthenticated) {
+					console.error('Authentication failed for:', url.pathname);
 					return error('Unauthorized', 401);
 				}
 				// Attach auth context to the request for downstream handlers
@@ -66,17 +72,21 @@ export default {
 			});
 
 			// Mount sub-routers
-			router.all('/api/votes/*', (request: Request, env: Env) => 
-				voteRouter.handle(request, env, (request as any).auth)
-			);
+			router.all('/api/votes/*', (request: Request, env: Env) => {
+				console.log("Handling votes route, auth:", (request as any).auth?.isAuthenticated);
+				return voteRouter.handle(request, env, (request as any).auth);
+			});
 
-			router.all('/api/users/*', (request: Request, env: Env) => 
-				userRouter.handle(request, env, (request as any).auth)
-			);
+			router.all('/api/users/*', (request: Request, env: Env) => {
+				console.log("Handling users route, auth:", (request as any).auth?.isAuthenticated);
+				return userRouter.handle(request, env, (request as any).auth);
+			});
 
-			router.all('/api/suggestions*', (request: Request, env: Env) => 
-				suggestionRouter.handle(request, env, (request as any).auth)
-			);
+			router.all('/api/suggestions*', (request: Request, env: Env) => {
+				const url = new URL(request.url);
+				console.log("Handling suggestions route:", url.pathname, "auth:", (request as any).auth?.isAuthenticated);
+				return suggestionRouter.handle(request, env, (request as any).auth);
+			});
 
 			// 404 for unmatched routes
 			router.all('*', () => error('Not Found', 404));

@@ -1,64 +1,54 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, takeUntil, take } from 'rxjs';
+import { AuthService as Auth0Service } from '@auth0/auth0-angular';
 
 @Component({
   selector: 'app-auth-callback',
   standalone: true,
+  imports: [CommonModule],
   template: `
-    <div class="flex items-center justify-center min-h-screen">
-      <div class="text-center">
-        <h2 class="text-xl font-semibold mb-2">Authenticating...</h2>
-        <p class="text-gray-600">Please wait while we complete the authentication process.</p>
-      </div>
+    <div class="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
     </div>
-  `
+  `,
+  styles: []
 })
-export class AuthCallbackComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
-  private hasNavigated = false;
-
+export class AuthCallbackComponent implements OnInit {
   constructor(
-    private auth: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private auth: AuthService,
+    private auth0: Auth0Service
   ) {}
 
   ngOnInit() {
-    // Log query parameters once
-    this.route.queryParams.pipe(
-      take(1)
-    ).subscribe(params => {
-      console.log('Callback - Query parameters:', params);
-    });
-
-    // Handle authentication state
-    this.auth.isAuthenticated$.pipe(
-      takeUntil(this.destroy$)
-    ).subscribe(
-      isAuthenticated => {
-        console.log('Callback - Authentication state:', isAuthenticated);
-        if (isAuthenticated && !this.hasNavigated) {
-          this.hasNavigated = true;
-          console.log('Callback - Navigating to home');
-          this.router.navigate(['/']);
-        }
-      }
-    );
-
-    // Log user profile once authenticated
-    this.auth.user$.pipe(
-      take(1)
-    ).subscribe(
-      user => {
-        console.log('Callback - User profile:', user);
-      }
-    );
+    this.handleCallback();
   }
 
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
+  private handleCallback() {
+    this.auth0.isAuthenticated$.subscribe({
+      next: (isAuthenticated: boolean) => {
+        if (isAuthenticated) {
+          this.auth0.user$.subscribe({
+            next: (user: any) => {
+              if (user) {
+                this.router.navigate(['/']);
+              }
+            },
+            error: (error) => {
+              console.error('Error getting user profile:', error);
+              this.router.navigate(['/']);
+            }
+          });
+        } else {
+          this.router.navigate(['/']);
+        }
+      },
+      error: (error) => {
+        console.error('Error checking authentication:', error);
+        this.router.navigate(['/']);
+      }
+    });
   }
 } 

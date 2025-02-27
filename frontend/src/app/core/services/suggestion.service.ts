@@ -1,26 +1,34 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Suggestion {
   id: number;
   description: string;
   user_id: string;
-  created_at: Date;
-  updated_at: Date;
+  elo_score: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PaginatedSuggestions {
   items: Suggestion[];
   total: number;
+  page: number;
+  per_page: number;
+}
+
+export interface RandomPair {
+  pair: Suggestion[];
+  remainingCount: number;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class SuggestionService {
-  private apiUrl = `${environment.api.serverUrl}/api/suggestions`;
+  private apiUrl = `${environment.apiUrl}/api/suggestions`;
 
   constructor(private http: HttpClient) {}
 
@@ -28,12 +36,21 @@ export class SuggestionService {
     return this.http.post<Suggestion>(this.apiUrl, { description });
   }
 
-  getSuggestions(page: number = 1, limit: number = 10): Observable<PaginatedSuggestions> {
-    return this.http.get<PaginatedSuggestions>(`${this.apiUrl}?page=${page}&limit=${limit}`);
+  getSuggestions(page: number = 1, perPage: number = 10): Observable<PaginatedSuggestions> {
+    const params = {
+      page: page.toString(),
+      per_page: perPage.toString()
+    };
+    return this.http.get<PaginatedSuggestions>(this.apiUrl, { params });
   }
 
-  getUserSuggestions(userId: string, page: number = 1, limit: number = 10): Observable<PaginatedSuggestions> {
-    return this.http.get<PaginatedSuggestions>(`${this.apiUrl}/user/${userId}?page=${page}&limit=${limit}`);
+  getUserSuggestions(userId: string, page: number = 1, perPage: number = 10): Observable<PaginatedSuggestions> {
+    const params = {
+      page: page.toString(),
+      per_page: perPage.toString(),
+      user_id: userId
+    };
+    return this.http.get<PaginatedSuggestions>(this.apiUrl, { params });
   }
 
   getSuggestionById(id: number): Observable<Suggestion> {
@@ -46,5 +63,40 @@ export class SuggestionService {
 
   deleteSuggestion(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  getRandomPair(): Observable<{ pair: [Suggestion, Suggestion]; remainingCount: number }> {
+    console.log('Calling getRandomPair from service');
+    
+    // Temporary workaround - create mock data for testing
+    if (true) { // Set to false to disable mock
+      console.log('Using mock data for random pair');
+      const mockSuggestions: [Suggestion, Suggestion] = [
+        {
+          id: 1,
+          description: 'Using hand sanitizer',
+          user_id: '123',
+          elo_score: 1500,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 2,
+          description: 'Wearing a pink shirt',
+          user_id: '456',
+          elo_score: 1500,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      ];
+      const mockResponse = {
+        pair: mockSuggestions,
+        remainingCount: 10
+      };
+      return of(mockResponse);
+    }
+    
+    // Real implementation
+    return this.http.get<{ pair: [Suggestion, Suggestion]; remainingCount: number }>(`${this.apiUrl}/random-pair`);
   }
 } 

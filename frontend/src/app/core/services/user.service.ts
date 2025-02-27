@@ -1,57 +1,82 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { ApiService } from './api.service';
+import { HttpClient } from '@angular/common/http';
+import { Observable, switchMap, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
+import { User as Auth0User } from '@auth0/auth0-spa-js';
 
 export interface User {
   id: string;
   email: string;
-  name: string;
   daily_votes_count: number;
   daily_suggestions_count: number;
-  last_vote_date: string | null;
-  last_suggestion_date: string | null;
   created_at: string;
   updated_at: string;
+}
+
+interface SyncUserData {
+  id: string;
+  email: string;
+  name?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-  constructor(private api: ApiService) {}
+  private apiUrl = `${environment.apiUrl}/api/users`;
+
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
   getCurrentUser(): Observable<User> {
-    return this.api.get<User>('/api/users');
+    // Synchronise d'abord l'utilisateur avec le backend
+    return this.authService.getUser().pipe(
+      tap(auth0User => console.log('Auth0 user:', auth0User)),
+      switchMap((auth0User: Auth0User | null | undefined) => {
+        if (!auth0User) {
+          throw new Error('User not authenticated');
+        }
+        const syncData = {
+          id: auth0User['id'] || auth0User['sub'] || '',
+          email: auth0User.email || '',
+          name: auth0User.name || auth0User.email?.split('@')[0] || 'Anonymous User'
+        };
+        console.log('Syncing user with data:', syncData);
+        return this.syncUser(syncData);
+      }),
+      tap(response => console.log('Sync response:', response)),
+      switchMap(() => this.http.get<User>(this.apiUrl))
+    );
+  }
+
+  getUserById(id: string): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/${id}`);
+  }
+
+  private syncUser(userData: SyncUserData): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/sync`, userData);
   }
 
   createOrUpdateUser(name: string): Observable<User> {
-    return this.api.post<User>('/api/users', { name });
+    return this.http.post<User>(`${this.apiUrl}/update`, { name });
   }
 
-  // Helper methods to check daily limits
-  canVoteToday(user: User): boolean {
-    const today = new Date().toISOString().split('T')[0];
-    return user.last_vote_date !== today || user.daily_votes_count < 10;
+  canVote(user: User): boolean {
+    return user.daily_votes_count < 10;
   }
 
-  canSuggestToday(user: User): boolean {
-    const today = new Date().toISOString().split('T')[0];
-    return user.last_suggestion_date !== today || user.daily_suggestions_count < 5;
+  canSuggest(user: User): boolean {
+    return user.daily_suggestions_count < 5;
   }
 
   getRemainingVotes(user: User): number {
-    const today = new Date().toISOString().split('T')[0];
-    if (user.last_vote_date !== today) {
-      return 10;
-    }
-    return Math.max(0, 10 - user.daily_votes_count);
+    return 10 - (user.daily_votes_count || 0);
   }
 
   getRemainingSuggestions(user: User): number {
-    const today = new Date().toISOString().split('T')[0];
-    if (user.last_suggestion_date !== today) {
-      return 5;
-    }
-    return Math.max(0, 5 - user.daily_suggestions_count);
+    return 5 - (user.daily_suggestions_count || 0);
   }
 } 
