@@ -34,7 +34,7 @@ export class HomeComponent implements OnInit {
     this.suggestionService.getSuggestions(this.currentPage, this.pageSize)
       .subscribe({
         next: (response) => {
-          this.suggestions = response.items;
+          this.suggestions = response.items.sort((a, b) => b.elo_score - a.elo_score);
           this.totalPages = Math.ceil(response.total / this.pageSize);
           this.loading = false;
         },
