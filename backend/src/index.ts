@@ -12,7 +12,6 @@
  */
 
 import { Router } from 'itty-router';
-import { SuggestionService } from './services/suggestion.service';
 import { createVoteRouter } from './routes/vote.routes';
 import { createUserRouter } from './routes/user.routes';
 import { createSuggestionRouter } from './routes/suggestion.routes';
