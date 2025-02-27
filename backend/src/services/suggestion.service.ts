@@ -88,17 +88,20 @@ export class SuggestionService {
   }
 
   async getRandomPairForVoting(userId: string): Promise<{ pair: Suggestion[]; remainingCount: number }> {
-    // Get suggestions not voted by the user
+    // Get suggestions not voted by the user (either as winner or loser)
     const result = await this.db
       .prepare(`
         SELECT s.* 
         FROM suggestions s
-        LEFT JOIN votes v ON s.id = v.suggestion_id AND v.user_id = ?
-        WHERE v.id IS NULL
+        WHERE s.id NOT IN (
+          SELECT winner_id FROM votes WHERE user_id = ?
+          UNION
+          SELECT loser_id FROM votes WHERE user_id = ?
+        )
         ORDER BY RANDOM()
         LIMIT 2
       `)
-      .bind(userId)
+      .bind(userId, userId)
       .all<Suggestion>();
 
     // Get total count of remaining suggestions to vote on
@@ -106,10 +109,13 @@ export class SuggestionService {
       .prepare(`
         SELECT COUNT(*) as count 
         FROM suggestions s
-        LEFT JOIN votes v ON s.id = v.suggestion_id AND v.user_id = ?
-        WHERE v.id IS NULL
+        WHERE s.id NOT IN (
+          SELECT winner_id FROM votes WHERE user_id = ?
+          UNION
+          SELECT loser_id FROM votes WHERE user_id = ?
+        )
       `)
-      .bind(userId)
+      .bind(userId, userId)
       .first<{ count: number }>();
 
     return {

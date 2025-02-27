@@ -69,7 +69,7 @@ export class SuggestionService {
     console.log('Calling getRandomPair from service');
     
     // Temporary workaround - create mock data for testing
-    if (true) { // Set to false to disable mock
+    if (false) { // Set to false to disable mock
       console.log('Using mock data for random pair');
       const mockSuggestions: [Suggestion, Suggestion] = [
         {
