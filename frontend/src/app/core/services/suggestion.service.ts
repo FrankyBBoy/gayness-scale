@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, map } from 'rxjs';
+import { Observable, of, map, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { UserService } from './user.service';
 
 export interface Suggestion {
   id: number;
@@ -30,10 +31,19 @@ export interface RandomPair {
 export class SuggestionService {
   private apiUrl = `${environment.apiUrl}/api/suggestions`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private userService: UserService
+  ) {}
 
   createSuggestion(description: string): Observable<Suggestion> {
-    return this.http.post<Suggestion>(this.apiUrl, { description });
+    return this.http.post<Suggestion>(this.apiUrl, { description })
+      .pipe(
+        tap(() => {
+          // Refresh user data to update the remaining suggestions count
+          this.userService.refreshUserData();
+        })
+      );
   }
 
   getSuggestions(page: number = 1, perPage: number = 10): Observable<PaginatedSuggestions> {

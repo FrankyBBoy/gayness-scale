@@ -1,24 +1,65 @@
 import { Suggestion, CreateSuggestionDTO, UpdateSuggestionDTO } from '../models/suggestion.model';
+import { UserService } from './user.service';
 
 export class SuggestionService {
-  constructor(private db: D1Database) {}
+  private userService: UserService;
+
+  constructor(private db: D1Database) {
+    this.userService = new UserService(db);
+  }
 
   async create(data: CreateSuggestionDTO): Promise<Suggestion> {
-    const now = new Date().toISOString();
-    const result = await this.db
-      .prepare(
-        `INSERT INTO suggestions (description, user_id, created_at, updated_at)
-         VALUES (?, ?, ?, ?)
-         RETURNING *`
-      )
-      .bind(data.description, data.user_id, now, now)
-      .first<Suggestion>();
-
-    if (!result) {
-      throw new Error('Failed to create suggestion');
+    // Check if user has reached daily limit
+    const user = await this.userService.getUserById(data.user_id);
+    if (!user) {
+      throw new Error('User not found');
     }
 
-    return result;
+    // Check if it's a new day since last suggestion
+    const today = new Date().toISOString().split('T')[0];
+    const lastSuggestionDate = user.last_suggestion_date ? user.last_suggestion_date.split('T')[0] : null;
+
+    // Reset count if it's a new day
+    let dailyCount = user.daily_suggestions_count || 0;
+    if (lastSuggestionDate !== today) {
+      dailyCount = 0;
+    }
+
+    // Check if user has reached daily limit (5 suggestions per day)
+    if (dailyCount >= 5) {
+      throw new Error('Daily suggestion limit reached');
+    }
+
+    const now = new Date().toISOString();
+
+    try {
+      // First, insert the suggestion
+      const result = await this.db
+        .prepare(
+          `INSERT INTO suggestions (description, user_id, created_at, updated_at)
+           VALUES (?, ?, ?, ?)
+           RETURNING *`
+        )
+        .bind(data.description, data.user_id, now, now)
+        .first<Suggestion>();
+
+      if (!result) {
+        throw new Error('Failed to create suggestion');
+      }
+
+      // Then, update user's daily suggestion count
+      await this.db.prepare(`
+        UPDATE users 
+        SET daily_suggestions_count = ?, 
+            last_suggestion_date = ?
+        WHERE id = ?
+      `).bind(dailyCount + 1, now, data.user_id).run();
+      
+      return result;
+    } catch (error) {
+      console.error('Error in suggestion creation:', error);
+      throw error;
+    }
   }
 
   async findAll(page: number = 1, limit: number = 10): Promise<{ items: Suggestion[]; total: number }> {

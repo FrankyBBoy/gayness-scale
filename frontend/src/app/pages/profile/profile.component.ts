@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserService, User } from '../../core/services/user.service';
 import { VoteService, Vote } from '../../core/services/vote.service';
 import { SuggestionService, Suggestion } from '../../core/services/suggestion.service';
+import { Subscription } from 'rxjs';
 
 interface UserStats {
   totalSuggestions: number;
@@ -17,7 +18,7 @@ interface UserStats {
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
   user: User | null = null;
   loading = true;
   error: string | null = null;
@@ -32,6 +33,7 @@ export class ProfileComponent implements OnInit {
   };
 
   private suggestionDescriptions = new Map<number, string>();
+  private userSubscription: Subscription | null = null;
 
   constructor(
     private userService: UserService,
@@ -41,6 +43,21 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit() {
     this.loadUserProfile();
+    
+    // Subscribe to user updates
+    this.userSubscription = this.userService.currentUser$.subscribe(user => {
+      if (user) {
+        this.user = user;
+        this.remainingVotes = 10 - (user.daily_votes_count || 0);
+        this.remainingSuggestions = 5 - (user.daily_suggestions_count || 0);
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.userSubscription) {
+      this.userSubscription.unsubscribe();
+    }
   }
 
   private loadUserProfile() {

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, switchMap, tap } from 'rxjs';
+import { Observable, switchMap, tap, BehaviorSubject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { User as Auth0User } from '@auth0/auth0-spa-js';
@@ -25,6 +25,8 @@ interface SyncUserData {
 })
 export class UserService {
   private apiUrl = `${environment.apiUrl}/api/users`;
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -48,7 +50,14 @@ export class UserService {
         return this.syncUser(syncData);
       }),
       tap(response => console.log('Sync response:', response)),
-      switchMap(() => this.http.get<User>(this.apiUrl))
+      switchMap(() => this.http.get<User>(this.apiUrl)),
+      tap(user => this.currentUserSubject.next(user))
+    );
+  }
+
+  refreshUserData(): Observable<User> {
+    return this.http.get<User>(this.apiUrl).pipe(
+      tap(user => this.currentUserSubject.next(user))
     );
   }
 
