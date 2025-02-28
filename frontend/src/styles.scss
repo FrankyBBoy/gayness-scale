@@ -1,5 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* You can add global styles to this file, and also import other style files */
+
+/* Global styles */
+body {
+  @apply font-body bg-gray-50;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  @apply font-display;
+}
+
+/* Custom animations */
+.hover-scale {
+  @apply transition-transform duration-300;
+  &:hover {
+    transform: scale(1.03);
+  }
+}
+
+/* Custom components */
+.rainbow-border {
+  @apply relative rounded-lg p-1 overflow-hidden;
+  
+  &::before {
+    content: '';
+    @apply absolute inset-0 bg-rainbow-gradient animate-pulse-rainbow;
+    z-index: -1;
+  }
+}
+
+.card {
+  @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
+}
+
+.btn-primary {
+  @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200;
+}
+
+.btn-rainbow {
+  @apply relative inline-flex items-center px-4 py-2 border-2 border-transparent text-sm font-medium rounded-md text-white overflow-hidden transition-all duration-300;
+  background: linear-gradient(90deg, #FF5757, #FF914D, #FFDE59, #70FF66, #5CE1E6, #7B68EE, #C77DFF, #FF5757);
+  background-size: 200% 100%;
+  animation: rainbow-move 3s linear infinite;
+}
+
+@keyframes rainbow-move {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+/* Fun emoji cursor */
+.cursor-rainbow {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><text y='20' font-size='20'>🌈</text></svg>"), auto;
+}
+
+.cursor-heart {
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><text y='20' font-size='20'>❤️</text></svg>"), auto;
+}

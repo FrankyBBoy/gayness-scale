@@ -1,23 +1,27 @@
-<div class="min-h-screen bg-gray-50">
+<div class="min-h-screen bg-gradient-to-b from-primary-50 to-secondary-50 cursor-heart">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="text-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">Vote for the Gayest</h1>
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-primary-600 mb-4 font-display">
+        <span class="inline-block animate-bounce-slow">❤️</span> Vote for the Gayest
+      </h1>
       @if (remainingVotes > 0) {
-        <p class="mt-2 text-sm text-gray-600">You have {{ remainingVotes }} votes remaining today</p>
+        <p class="mt-2 text-lg text-gray-600 font-medium">
+          You have <span class="text-secondary-600 font-bold">{{ remainingVotes }}</span> votes remaining today
+        </p>
       }
     </div>
 
     <!-- Error message -->
     @if (error) {
-      <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+      <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-md shadow-md">
         <div class="flex">
           <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <svg class="h-6 w-6 text-red-400" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
             </svg>
           </div>
           <div class="ml-3">
-            <p class="text-sm text-red-700">{{ error }}</p>
+            <p class="text-base text-red-700 font-medium">{{ error }}</p>
           </div>
         </div>
       </div>
@@ -25,19 +29,24 @@
 
     <!-- Loading spinner -->
     @if (loading) {
-      <div class="flex justify-center items-center py-12">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      <div class="flex justify-center items-center py-16">
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-rainbow-gradient"></div>
       </div>
     }
 
     <!-- Daily limit reached -->
     @if (!loading && !votingEnabled) {
-      <div class="text-center py-12">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">Daily Voting Limit Reached</h3>
-        <p class="mt-1 text-sm text-gray-500">Come back tomorrow to continue voting!</p>
+      <div class="text-center py-16 bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+        <div class="text-4xl mb-4">⏰</div>
+        <h3 class="text-xl font-bold text-primary-600 mb-2 font-display">Daily Voting Limit Reached</h3>
+        <p class="text-gray-600 text-lg">Come back tomorrow to continue voting!</p>
+        <p class="text-gray-500 mt-4">In the meantime, why not add some new suggestions?</p>
+        <button
+          (click)="navigateToSuggest()"
+          class="btn-rainbow mt-6"
+        >
+          <span class="mr-1">💡</span> Add Suggestion
+        </button>
       </div>
     }
 
@@ -45,44 +54,55 @@
     @if (!loading && votingEnabled && leftSuggestion && rightSuggestion) {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- Left suggestion -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-             (click)="vote(leftSuggestion, rightSuggestion)">
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-semibold text-gray-900">{{ leftSuggestion.title }}</h2>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                {{ leftSuggestion.elo_score }}
-              </span>
+        <div class="rainbow-border">
+          <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer transform hover:scale-105 transition-transform duration-300"
+               (click)="vote(leftSuggestion, rightSuggestion)">
+            <div class="p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-primary-600">{{ leftSuggestion.title }}</h2>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
+                  {{ leftSuggestion.elo_score }}
+                </span>
+              </div>
+              @if (leftSuggestion.description) {
+                <p class="text-gray-600 text-lg">{{ leftSuggestion.description }}</p>
+              }
+              <div class="mt-4 text-center">
+                <span class="inline-block text-3xl">👈 Vote for this</span>
+              </div>
             </div>
-            @if (leftSuggestion.description) {
-              <p class="text-gray-600">{{ leftSuggestion.description }}</p>
-            }
           </div>
         </div>
 
         <!-- Right suggestion -->
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-             (click)="vote(rightSuggestion, leftSuggestion)">
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-xl font-semibold text-gray-900">{{ rightSuggestion.title }}</h2>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                {{ rightSuggestion.elo_score }}
-              </span>
+        <div class="rainbow-border">
+          <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 cursor-pointer transform hover:scale-105 transition-transform duration-300"
+               (click)="vote(rightSuggestion, leftSuggestion)">
+            <div class="p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-secondary-600">{{ rightSuggestion.title }}</h2>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary-100 text-secondary-800">
+                  {{ rightSuggestion.elo_score }}
+                </span>
+              </div>
+              @if (rightSuggestion.description) {
+                <p class="text-gray-600 text-lg">{{ rightSuggestion.description }}</p>
+              }
+              <div class="mt-4 text-center">
+                <span class="inline-block text-3xl">Vote for this 👉</span>
+              </div>
             </div>
-            @if (rightSuggestion.description) {
-              <p class="text-gray-600">{{ rightSuggestion.description }}</p>
-            }
           </div>
         </div>
       </div>
 
       <!-- Skip button -->
-      <div class="flex justify-center mt-8">
+      <div class="flex justify-center mt-10">
         <button
           (click)="skipPair()"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-          Skip this pair
+          class="btn-secondary text-base px-6 py-3 font-medium flex items-center"
+        >
+          <span class="mr-2">🔄</span> Skip this pair
         </button>
       </div>
     }
