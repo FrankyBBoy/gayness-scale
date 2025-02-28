@@ -54,6 +54,16 @@ export class SuggestionService {
     return this.http.get<PaginatedSuggestions>(this.apiUrl, { params });
   }
 
+  getTopSuggestionsByElo(page: number = 1, perPage: number = 10): Observable<PaginatedSuggestions> {
+    const params = {
+      page: page.toString(),
+      per_page: perPage.toString(),
+      sort_by: 'elo_score',
+      sort_order: 'desc'
+    };
+    return this.http.get<PaginatedSuggestions>(this.apiUrl, { params });
+  }
+
   getLatestSuggestions(limit: number = 10): Observable<Suggestion[]> {
     const params = {
       page: '1',
@@ -90,37 +100,6 @@ export class SuggestionService {
   }
 
   getRandomPair(): Observable<{ pair: [Suggestion, Suggestion]; remainingCount: number }> {
-    console.log('Calling getRandomPair from service');
-    
-    // Temporary workaround - create mock data for testing
-    if (false) { // Set to false to disable mock
-      console.log('Using mock data for random pair');
-      const mockSuggestions: [Suggestion, Suggestion] = [
-        {
-          id: 1,
-          description: 'Using hand sanitizer',
-          user_id: '123',
-          elo_score: 1500,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: 2,
-          description: 'Wearing a pink shirt',
-          user_id: '456',
-          elo_score: 1500,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
-      const mockResponse = {
-        pair: mockSuggestions,
-        remainingCount: 10
-      };
-      return of(mockResponse);
-    }
-    
-    // Real implementation
     return this.http.get<{ pair: [Suggestion, Suggestion]; remainingCount: number }>(`${this.apiUrl}/random-pair`);
   }
 } 

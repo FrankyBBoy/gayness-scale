@@ -62,15 +62,29 @@ export class SuggestionService {
     }
   }
 
-  async findAll(page: number = 1, limit: number = 10): Promise<{ items: Suggestion[]; total: number }> {
+  async findAll(page: number = 1, limit: number = 10, sortBy: string = 'created_at', sortOrder: string = 'desc'): Promise<{ items: Suggestion[]; total: number }> {
     const offset = (page - 1) * limit;
+
+    // Validate sort parameters to prevent SQL injection
+    const validSortColumns = ['id', 'description', 'elo_score', 'created_at', 'updated_at'];
+    const validSortOrders = ['asc', 'desc'];
+    
+    // Default to created_at if invalid sort column
+    if (!validSortColumns.includes(sortBy)) {
+      sortBy = 'created_at';
+    }
+    
+    // Default to desc if invalid sort order
+    if (!validSortOrders.includes(sortOrder.toLowerCase())) {
+      sortOrder = 'desc';
+    }
 
     const countResult = await this.db
       .prepare('SELECT COUNT(*) as count FROM suggestions')
       .first<{ count: number }>();
 
     const suggestions = await this.db
-      .prepare('SELECT * FROM suggestions ORDER BY created_at DESC LIMIT ? OFFSET ?')
+      .prepare(`SELECT * FROM suggestions ORDER BY ${sortBy} ${sortOrder} LIMIT ? OFFSET ?`)
       .bind(limit, offset)
       .all<Suggestion>();
 

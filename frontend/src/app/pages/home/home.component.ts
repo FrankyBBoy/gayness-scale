@@ -19,6 +19,7 @@ export class HomeComponent implements OnInit {
   currentPage = 1;
   pageSize = 10;
   totalPages = 1;
+  Math = Math;
 
   constructor(
     private suggestionService: SuggestionService,
@@ -35,12 +36,11 @@ export class HomeComponent implements OnInit {
 
     // Utiliser forkJoin pour charger les deux ensembles de données en parallèle
     forkJoin({
-      topSuggestions: this.suggestionService.getSuggestions(this.currentPage, this.pageSize),
+      topSuggestions: this.suggestionService.getTopSuggestionsByElo(this.currentPage, this.pageSize),
       latestSuggestions: this.suggestionService.getLatestSuggestions(10)
     }).subscribe({
       next: (results) => {
-        // Trier les suggestions par score ELO décroissant
-        this.suggestions = results.topSuggestions.items.sort((a, b) => b.elo_score - a.elo_score);
+        this.suggestions = results.topSuggestions.items;
         this.latestSuggestions = results.latestSuggestions;
         this.totalPages = Math.ceil(results.topSuggestions.total / this.pageSize);
         this.loading = false;
@@ -53,14 +53,14 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  loadSuggestions() {
+  loadTopSuggestions() {
     this.loading = true;
     this.error = null;
 
-    this.suggestionService.getSuggestions(this.currentPage, this.pageSize)
+    this.suggestionService.getTopSuggestionsByElo(this.currentPage, this.pageSize)
       .subscribe({
         next: (response) => {
-          this.suggestions = response.items.sort((a, b) => b.elo_score - a.elo_score);
+          this.suggestions = response.items;
           this.totalPages = Math.ceil(response.total / this.pageSize);
           this.loading = false;
         },
@@ -74,7 +74,7 @@ export class HomeComponent implements OnInit {
 
   onPageChange(page: number) {
     this.currentPage = page;
-    this.loadSuggestions();
+    this.loadTopSuggestions();
   }
 
   get pages(): number[] {

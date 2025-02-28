@@ -15,10 +15,12 @@ export function createSuggestionRouter() {
     try {
       const url = new URL(request.url);
       const page = parseInt(url.searchParams.get('page') || '1');
-      const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
+      const pageSize = parseInt(url.searchParams.get('per_page') || '10');
+      const sortBy = url.searchParams.get('sort_by') || 'created_at';
+      const sortOrder = url.searchParams.get('sort_order') || 'desc';
 
       const suggestionService = new SuggestionService(env.DB);
-      const suggestions = await suggestionService.findAll(page, pageSize);
+      const suggestions = await suggestionService.findAll(page, pageSize, sortBy, sortOrder);
 
       return json(suggestions);
     } catch (e) {
