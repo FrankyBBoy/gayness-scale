@@ -95,12 +95,17 @@ export class ProfileComponent implements OnInit, OnDestroy {
       if (votes) {
         this.recentVotes = votes.items;
         this.loadVotedSuggestions(votes.items);
+        
+        this.stats = {
+          totalSuggestions: this.totalSuggestions,
+          totalVotes: votes.total
+        };
+      } else {
+        this.stats = {
+          totalSuggestions: this.totalSuggestions,
+          totalVotes: 0
+        };
       }
-
-      this.stats = {
-        totalSuggestions: this.totalSuggestions,
-        totalVotes: this.recentVotes.length
-      };
 
       this.loading = false;
     } catch (err) {
