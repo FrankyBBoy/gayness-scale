@@ -8,7 +8,6 @@ import { Subscription } from 'rxjs';
 interface UserStats {
   totalSuggestions: number;
   totalVotes: number;
-  winRate: number;
 }
 
 @Component({
@@ -22,14 +21,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
   user: User | null = null;
   loading = true;
   error: string | null = null;
-  remainingVotes = 10;
   remainingSuggestions = 5;
   recentVotes: Vote[] = [];
   recentSuggestions: Suggestion[] = [];
   stats: UserStats = {
     totalSuggestions: 0,
-    totalVotes: 0,
-    winRate: 0
+    totalVotes: 0
   };
 
   private suggestionDescriptions = new Map<number, string>();
@@ -48,7 +45,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.userSubscription = this.userService.currentUser$.subscribe(user => {
       if (user) {
         this.user = user;
-        this.remainingVotes = 10 - (user.daily_votes_count || 0);
         this.remainingSuggestions = 5 - (user.daily_suggestions_count || 0);
       }
     });
@@ -68,7 +64,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
       next: (user) => {
         this.user = user;
         if (user) {
-          this.remainingVotes = 10 - (user.daily_votes_count || 0);
           this.remainingSuggestions = 5 - (user.daily_suggestions_count || 0);
           this.loadUserActivity(user.id);
         }
@@ -97,8 +92,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
       this.stats = {
         totalSuggestions: this.recentSuggestions.length,
-        totalVotes: this.recentVotes.length,
-        winRate: this.calculateWinRate()
+        totalVotes: this.recentVotes.length
       };
 
       this.loading = false;
@@ -128,14 +122,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
         });
       }
     });
-  }
-
-  private calculateWinRate(): number {
-    if (this.recentVotes.length === 0) return 0;
-    const totalWins = this.recentVotes.filter(vote => 
-      this.recentSuggestions.some(s => s.id === vote.winner_id)
-    ).length;
-    return Math.round((totalWins / this.recentVotes.length) * 100);
   }
 
   getDescription(suggestionId: number): string {

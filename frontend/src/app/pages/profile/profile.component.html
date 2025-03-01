@@ -40,14 +40,6 @@
                   <dt class="text-base font-medium text-primary-600">Email</dt>
                   <dd class="mt-1 text-base text-gray-900 sm:mt-0 sm:col-span-2">{{ user?.email }}</dd>
                 </div>
-                <div class="bg-gray-50 px-6 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-8">
-                  <dt class="text-base font-medium text-primary-600">Remaining votes today</dt>
-                  <dd class="mt-1 text-base text-gray-900 sm:mt-0 sm:col-span-2">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
-                      <span class="mr-1">🗳️</span> {{ remainingVotes }}
-                    </span>
-                  </dd>
-                </div>
                 <div class="bg-white px-6 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-8">
                   <dt class="text-base font-medium text-primary-600">Remaining suggestions today</dt>
                   <dd class="mt-1 text-base text-gray-900 sm:mt-0 sm:col-span-2">
@@ -83,14 +75,6 @@
                   <dd class="mt-1 text-base text-gray-900 sm:mt-0 sm:col-span-2">
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-rainbow-gradient text-white">
                       {{ stats.totalVotes }}
-                    </span>
-                  </dd>
-                </div>
-                <div class="bg-white px-6 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-8">
-                  <dt class="text-base font-medium text-primary-600">Win Rate</dt>
-                  <dd class="mt-1 text-base text-gray-900 sm:mt-0 sm:col-span-2">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-rainbow-gradient text-white">
-                      {{ stats.winRate }}%
                     </span>
                   </dd>
                 </div>
