@@ -98,14 +98,19 @@ export class VoteService {
   async getUserVotes(userId: string, page: number = 1, limit: number = 10): Promise<{ items: Vote[]; total: number }> {
     const offset = (page - 1) * limit;
 
+    // Décoder l'ID utilisateur qui pourrait contenir des caractères encodés dans l'URL
+    const decodedUserId = decodeURIComponent(userId);
+
+
+
     const countResult = await this.db
       .prepare('SELECT COUNT(*) as count FROM votes WHERE user_id = ?')
-      .bind(userId)
+      .bind(decodedUserId)
       .first<{ count: number }>();
 
     const votes = await this.db
       .prepare('SELECT * FROM votes WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?')
-      .bind(userId, limit, offset)
+      .bind(decodedUserId, limit, offset)
       .all<Vote>();
 
     return {

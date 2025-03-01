@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { UserService, User } from '../../core/services/user.service';
 import { VoteService, Vote } from '../../core/services/vote.service';
 import { SuggestionService, Suggestion, PaginatedSuggestions } from '../../core/services/suggestion.service';
-import { Subscription } from 'rxjs';
+import { Subscription, firstValueFrom } from 'rxjs';
 
 interface UserStats {
   totalSuggestions: number;
@@ -85,11 +85,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadUserActivity(userId: string) {
-    Promise.all([
-      this.loadUserSuggestions(userId, this.currentSuggestionPage),
-      this.voteService.getUserVotes(userId).toPromise()
-    ]).then(([suggestionsData, votes]) => {
+  private async loadUserActivity(userId: string) {
+    try {
+      const [suggestionsData, votes] = await Promise.all([
+        this.loadUserSuggestions(userId, this.currentSuggestionPage),
+        firstValueFrom(this.voteService.getUserVotes(userId))
+      ]);
+      
       if (votes) {
         this.recentVotes = votes.items;
         this.loadVotedSuggestions(votes.items);
@@ -101,32 +103,33 @@ export class ProfileComponent implements OnInit, OnDestroy {
       };
 
       this.loading = false;
-    }).catch(err => {
+    } catch (err) {
       this.error = 'Failed to load user activity';
       this.loading = false;
       console.error('Error loading user activity:', err);
-    });
+    }
   }
 
-  private loadUserSuggestions(userId: string, page: number): Promise<PaginatedSuggestions | null> {
+  private async loadUserSuggestions(userId: string, page: number): Promise<PaginatedSuggestions | null> {
     this.loadingSuggestions = true;
-    return this.suggestionService.getUserSuggestions(userId, page, this.suggestionsPerPage).toPromise()
-      .then(suggestions => {
-        if (suggestions) {
-          this.recentSuggestions = suggestions.items;
-          this.totalSuggestions = suggestions.total;
-          suggestions.items.forEach(s => this.suggestionDescriptions.set(s.id, s.description));
-          this.loadingSuggestions = false;
-          return suggestions;
-        }
-        this.loadingSuggestions = false;
-        return null;
-      })
-      .catch(err => {
-        console.error('Error loading user suggestions:', err);
-        this.loadingSuggestions = false;
-        throw err;
-      });
+    try {
+      const suggestions = await firstValueFrom(
+        this.suggestionService.getUserSuggestions(userId, page, this.suggestionsPerPage)
+      );
+      
+      if (suggestions) {
+        this.recentSuggestions = suggestions.items;
+        this.totalSuggestions = suggestions.total;
+        suggestions.items.forEach(s => this.suggestionDescriptions.set(s.id, s.description));
+      }
+      
+      this.loadingSuggestions = false;
+      return suggestions || null;
+    } catch (err) {
+      console.error('Error loading user suggestions:', err);
+      this.loadingSuggestions = false;
+      throw err;
+    }
   }
 
   loadPage(page: number) {
