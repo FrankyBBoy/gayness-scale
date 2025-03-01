@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserService, User } from '../../core/services/user.service';
 import { VoteService, Vote } from '../../core/services/vote.service';
-import { SuggestionService, Suggestion } from '../../core/services/suggestion.service';
+import { SuggestionService, Suggestion, PaginatedSuggestions } from '../../core/services/suggestion.service';
 import { Subscription } from 'rxjs';
 
 interface UserStats {
@@ -28,6 +28,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
     totalSuggestions: 0,
     totalVotes: 0
   };
+
+  // Pagination for suggestions
+  currentSuggestionPage = 1;
+  suggestionsPerPage = 10;
+  totalSuggestions = 0;
+  loadingSuggestions = false;
+  
+  // Référence à l'objet Math pour l'utiliser dans le template
+  Math = Math;
 
   private suggestionDescriptions = new Map<number, string>();
   private userSubscription: Subscription | null = null;
@@ -78,20 +87,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   private loadUserActivity(userId: string) {
     Promise.all([
-      this.suggestionService.getUserSuggestions(userId).toPromise(),
+      this.loadUserSuggestions(userId, this.currentSuggestionPage),
       this.voteService.getUserVotes(userId).toPromise()
-    ]).then(([suggestions, votes]) => {
-      if (suggestions) {
-        this.recentSuggestions = suggestions.items;
-        suggestions.items.forEach(s => this.suggestionDescriptions.set(s.id, s.description));
-      }
+    ]).then(([suggestionsData, votes]) => {
       if (votes) {
         this.recentVotes = votes.items;
         this.loadVotedSuggestions(votes.items);
       }
 
       this.stats = {
-        totalSuggestions: this.recentSuggestions.length,
+        totalSuggestions: this.totalSuggestions,
         totalVotes: this.recentVotes.length
       };
 
@@ -101,6 +106,57 @@ export class ProfileComponent implements OnInit, OnDestroy {
       this.loading = false;
       console.error('Error loading user activity:', err);
     });
+  }
+
+  private loadUserSuggestions(userId: string, page: number): Promise<PaginatedSuggestions | null> {
+    this.loadingSuggestions = true;
+    return this.suggestionService.getUserSuggestions(userId, page, this.suggestionsPerPage).toPromise()
+      .then(suggestions => {
+        if (suggestions) {
+          this.recentSuggestions = suggestions.items;
+          this.totalSuggestions = suggestions.total;
+          suggestions.items.forEach(s => this.suggestionDescriptions.set(s.id, s.description));
+          this.loadingSuggestions = false;
+          return suggestions;
+        }
+        this.loadingSuggestions = false;
+        return null;
+      })
+      .catch(err => {
+        console.error('Error loading user suggestions:', err);
+        this.loadingSuggestions = false;
+        throw err;
+      });
+  }
+
+  loadPage(page: number) {
+    if (this.user && page !== this.currentSuggestionPage && page > 0 && page <= this.getTotalPages()) {
+      this.currentSuggestionPage = page;
+      this.loadUserSuggestions(this.user.id, page);
+    }
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.totalSuggestions / this.suggestionsPerPage);
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.getTotalPages();
+    const currentPage = this.currentSuggestionPage;
+    
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    
+    if (currentPage <= 3) {
+      return [1, 2, 3, 4, 5];
+    }
+    
+    if (currentPage >= totalPages - 2) {
+      return [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    
+    return [currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2];
   }
 
   private loadVotedSuggestions(votes: Vote[]) {

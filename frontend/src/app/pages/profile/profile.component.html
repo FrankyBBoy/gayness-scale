@@ -83,30 +83,112 @@
           </div>
         </div>
 
-        @if (recentSuggestions.length > 0) {
+        @if (totalSuggestions > 0) {
           <div class="mt-8">
-            <h3 class="text-2xl leading-6 font-bold text-primary-600 mb-4 font-display flex items-center">
-              <span class="mr-2">✨</span> Your Recent Suggestions
-            </h3>
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-2xl leading-6 font-bold text-primary-600 font-display flex items-center">
+                <span class="mr-2">✨</span> Your Suggestions
+              </h3>
+              <span class="text-sm text-gray-500">Showing {{ (currentSuggestionPage - 1) * suggestionsPerPage + 1 }} - {{ Math.min(currentSuggestionPage * suggestionsPerPage, totalSuggestions) }} of {{ totalSuggestions }}</span>
+            </div>
+            
             <div class="rainbow-border">
               <div class="bg-white shadow-lg overflow-hidden sm:rounded-lg">
-                <ul role="list" class="divide-y divide-gray-200">
-                  @for (suggestion of recentSuggestions; track suggestion.id) {
-                    <li class="px-6 py-5 hover:bg-primary-50 transition-colors duration-200 hover-scale">
-                      <div class="flex items-center justify-between">
+                @if (loadingSuggestions) {
+                  <div class="flex justify-center items-center py-16">
+                    <div class="animate-spin rounded-full h-12 w-12 border-4 border-rainbow-gradient"></div>
+                  </div>
+                } @else {
+                  <ul role="list" class="divide-y divide-gray-200">
+                    @for (suggestion of recentSuggestions; track suggestion.id) {
+                      <li class="px-6 py-5 hover:bg-primary-50 transition-colors duration-200 hover-scale">
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <p class="text-base font-medium text-gray-900">{{ suggestion.description }}</p>
+                            <p class="text-sm text-gray-500 mt-1">Created on {{ suggestion.created_at | date:'medium' }}</p>
+                          </div>
+                          <div>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-rainbow-gradient text-white">
+                              ELO: {{ suggestion.elo_score }}
+                            </span>
+                          </div>
+                        </div>
+                      </li>
+                    }
+                  </ul>
+                  
+                  <!-- Pagination -->
+                  @if (getTotalPages() > 1) {
+                    <div class="px-6 py-4 flex items-center justify-between border-t border-gray-200 sm:px-6">
+                      <div class="flex-1 flex justify-between sm:hidden">
+                        <button 
+                          [disabled]="currentSuggestionPage === 1"
+                          (click)="loadPage(currentSuggestionPage - 1)"
+                          class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                          [class.opacity-50]="currentSuggestionPage === 1"
+                          [class.cursor-not-allowed]="currentSuggestionPage === 1">
+                          Previous
+                        </button>
+                        <button 
+                          [disabled]="currentSuggestionPage === getTotalPages()"
+                          (click)="loadPage(currentSuggestionPage + 1)"
+                          class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                          [class.opacity-50]="currentSuggestionPage === getTotalPages()"
+                          [class.cursor-not-allowed]="currentSuggestionPage === getTotalPages()">
+                          Next
+                        </button>
+                      </div>
+                      <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                         <div>
-                          <p class="text-base font-medium text-gray-900">{{ suggestion.description }}</p>
-                          <p class="text-sm text-gray-500 mt-1">Created on {{ suggestion.created_at | date:'medium' }}</p>
+                          <p class="text-sm text-gray-700">
+                            Showing <span class="font-medium">{{ (currentSuggestionPage - 1) * suggestionsPerPage + 1 }}</span> to <span class="font-medium">{{ Math.min(currentSuggestionPage * suggestionsPerPage, totalSuggestions) }}</span> of <span class="font-medium">{{ totalSuggestions }}</span> results
+                          </p>
                         </div>
                         <div>
-                          <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-rainbow-gradient text-white">
-                            ELO: {{ suggestion.elo_score }}
-                          </span>
+                          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            <!-- Previous Page Button -->
+                            <button 
+                              [disabled]="currentSuggestionPage === 1"
+                              (click)="loadPage(currentSuggestionPage - 1)"
+                              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                              [class.opacity-50]="currentSuggestionPage === 1"
+                              [class.cursor-not-allowed]="currentSuggestionPage === 1">
+                              <span class="sr-only">Previous</span>
+                              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                              </svg>
+                            </button>
+                            
+                            <!-- Page Numbers -->
+                            @for (pageNum of getPageNumbers(); track pageNum) {
+                              <button 
+                                (click)="loadPage(pageNum)"
+                                [class.bg-primary-50]="pageNum === currentSuggestionPage"
+                                [class.text-primary-600]="pageNum === currentSuggestionPage"
+                                [class.border-primary-500]="pageNum === currentSuggestionPage"
+                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                {{ pageNum }}
+                              </button>
+                            }
+                            
+                            <!-- Next Page Button -->
+                            <button 
+                              [disabled]="currentSuggestionPage === getTotalPages()"
+                              (click)="loadPage(currentSuggestionPage + 1)"
+                              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                              [class.opacity-50]="currentSuggestionPage === getTotalPages()"
+                              [class.cursor-not-allowed]="currentSuggestionPage === getTotalPages()">
+                              <span class="sr-only">Next</span>
+                              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                              </svg>
+                            </button>
+                          </nav>
                         </div>
                       </div>
-                    </li>
+                    </div>
                   }
-                </ul>
+                }
               </div>
             </div>
           </div>
