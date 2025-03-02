@@ -128,9 +128,9 @@
   - [x] Valider la non-répétition des suggestions
 
 ### Frontend
-- [ ] Tests unitaires des services
+- [x] Tests unitaires des services
 - [ ] Tests des components
-- [ ] Tests E2E avec Cypress
+- [x] Tests E2E avec Cypress
 
 ## 6. Déploiement
 
