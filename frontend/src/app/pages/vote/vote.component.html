@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gradient-to-b from-primary-50 to-secondary-50 cursor-heart">
+<div class="min-h-screen bg-gradient-to-b from-primary-50 to-secondary-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="text-center mb-12">
       <h1 class="text-4xl font-bold text-primary-600 mb-4 font-display">
@@ -12,7 +12,7 @@
     </div>
 
     <!-- Error message -->
-    @if (error) {
+    @if (error && error !== 'NO_MORE_SUGGESTIONS') {
       <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-md shadow-md">
         <div class="flex">
           <div class="flex-shrink-0">
@@ -31,6 +31,22 @@
     @if (loading) {
       <div class="flex justify-center items-center py-16">
         <div class="animate-spin rounded-full h-16 w-16 border-4 border-rainbow-gradient"></div>
+      </div>
+    }
+
+    <!-- No more suggestions to vote on -->
+    @if (!loading && error === 'NO_MORE_SUGGESTIONS') {
+      <div class="text-center py-16 bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto rainbow-border">
+        <div class="text-4xl mb-4">🎉</div>
+        <h3 class="text-xl font-bold text-primary-600 mb-2 font-display">Vous avez tout voté !</h3>
+        <p class="text-gray-600 text-lg">Il n'y a plus de suggestions à évaluer pour le moment.</p>
+        <p class="text-gray-500 mt-4">Pourquoi ne pas ajouter vos propres suggestions ?</p>
+        <button
+          (click)="navigateToSuggest()"
+          class="btn-rainbow mt-6"
+        >
+          <span class="mr-1">💡</span> Ajouter une suggestion
+        </button>
       </div>
     }
 
@@ -59,14 +75,11 @@
                (click)="vote(leftSuggestion, rightSuggestion)">
             <div class="p-6">
               <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-semibold text-primary-600">{{ leftSuggestion.title }}</h2>
+                <h2 class="text-xl font-semibold text-primary-600">{{ leftSuggestion.description }}</h2>
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
                   {{ leftSuggestion.elo_score }}
                 </span>
               </div>
-              @if (leftSuggestion.description) {
-                <p class="text-gray-600 text-lg">{{ leftSuggestion.description }}</p>
-              }
               <div class="mt-4 text-center">
                 <span class="inline-block text-3xl">👈 Vote for this</span>
               </div>
@@ -80,14 +93,11 @@
                (click)="vote(rightSuggestion, leftSuggestion)">
             <div class="p-6">
               <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-semibold text-secondary-600">{{ rightSuggestion.title }}</h2>
+                <h2 class="text-xl font-semibold text-secondary-600">{{ rightSuggestion.description }}</h2>
                 <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary-100 text-secondary-800">
                   {{ rightSuggestion.elo_score }}
                 </span>
               </div>
-              @if (rightSuggestion.description) {
-                <p class="text-gray-600 text-lg">{{ rightSuggestion.description }}</p>
-              }
               <div class="mt-4 text-center">
                 <span class="inline-block text-3xl">Vote for this 👉</span>
               </div>
