@@ -16,6 +16,7 @@ describe('UserService', () => {
     email: 'user@example.com',
     daily_votes_count: 2,
     daily_suggestions_count: 1,
+    last_suggestion_date: new Date().toISOString(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
@@ -26,6 +27,7 @@ describe('UserService', () => {
     email: 'user@example.com',
     daily_votes_count: 0,
     daily_suggestions_count: 0,
+    last_suggestion_date: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
