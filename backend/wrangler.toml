@@ -7,6 +7,10 @@ compatibility_flags = ["nodejs_compat"]
 AUTH0_DOMAIN = "dev-7y1grk6neur7cepa.us.auth0.com"
 AUTH0_AUDIENCE = "https://gayness-scale-backend/"
 
+# Variables d'environnement spécifiques à la production
+[env.production]
+vars = { AUTH0_AUDIENCE = "https://gayness-scale-backend-prod/" }
+
 [[d1_databases]]
 binding = "DB"
 database_name = "gayness-scale-db"

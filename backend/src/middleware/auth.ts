@@ -1,5 +1,12 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
+// Interface pour l'environnement
+interface Env {
+  AUTH0_DOMAIN: string;
+  AUTH0_AUDIENCE: string;
+  [key: string]: any;
+}
+
 export interface AuthContext {
   user?: {
     sub: string;
@@ -45,7 +52,7 @@ async function getJWKS(domain: string) {
   }
 }
 
-export async function authMiddleware(request: Request): Promise<AuthContext> {
+export async function authMiddleware(request: Request, env: Env): Promise<AuthContext> {
   try {
     console.log("Auth middleware called for:", new URL(request.url).pathname);
     
@@ -55,7 +62,7 @@ export async function authMiddleware(request: Request): Promise<AuthContext> {
       return { isAuthenticated: false };
     }
 
-    const domain = request.headers.get('x-auth0-domain') || 'dev-7y1grk6neur7cepa.us.auth0.com';
+    const domain = request.headers.get('x-auth0-domain') || env.AUTH0_DOMAIN;
     console.log("Using Auth0 domain:", domain);
     
     const JWKS = await getJWKS(domain);
@@ -71,7 +78,7 @@ export async function authMiddleware(request: Request): Promise<AuthContext> {
     try {
       const { payload } = await jwtVerify(token, JWKS, {
         issuer: `https://${domain}/`,
-        audience: 'https://gayness-scale-backend/',
+        audience: env.AUTH0_AUDIENCE,
       });
 
       console.log("Token verified successfully for user:", payload.sub);

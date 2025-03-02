@@ -20,6 +20,8 @@ import { json, error } from './utils/response';
 
 interface Env {
 	DB: D1Database;
+	AUTH0_DOMAIN: string;
+	AUTH0_AUDIENCE: string;
 }
 
 export default {
@@ -60,7 +62,7 @@ export default {
 					return null;
 				}
 
-				const authResult = await authMiddleware(request);
+				const authResult = await authMiddleware(request, env);
 				if (!authResult.isAuthenticated) {
 					console.error('Authentication failed for:', url.pathname);
 					return error('Unauthorized', 401);
