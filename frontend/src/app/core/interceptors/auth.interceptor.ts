@@ -8,12 +8,12 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   const auth = inject(AuthService);
 
   // Skip if not calling our API
-  if (!req.url.startsWith(environment.apiUrl)) {
+  if (!req.url.startsWith(environment.api.serverUrl)) {
     return next(req);
   }
 
   // Skip if public endpoint (only GET /api/suggestions is public for listing)
-  const isPublicEndpoint = req.url.startsWith(`${environment.apiUrl}/api/suggestions`) &&
+  const isPublicEndpoint = req.url.startsWith(`${environment.api.serverUrl}/api/suggestions`) &&
                            !req.url.includes('/random-pair') &&
                            req.method === 'GET';
 

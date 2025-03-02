@@ -29,7 +29,7 @@ export interface RandomPair {
   providedIn: 'root'
 })
 export class SuggestionService {
-  private apiUrl = `${environment.apiUrl}/api/suggestions`;
+  private apiUrl = `${environment.api.serverUrl}/api/suggestions`;
 
   constructor(
     private http: HttpClient,

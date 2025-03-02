@@ -9,7 +9,7 @@ describe('UserService', () => {
   let service: UserService;
   let httpMock: HttpTestingController;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
-  const apiUrl = `${environment.apiUrl}/api/users`;
+  const apiUrl = `${environment.api.serverUrl}/api/users`;
 
   const mockUser: User = {
     id: 'auth0|123456',

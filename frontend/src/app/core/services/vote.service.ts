@@ -23,7 +23,7 @@ export interface PaginatedVotes {
   providedIn: 'root'
 })
 export class VoteService {
-  private apiUrl = `${environment.apiUrl}/api/votes`;
+  private apiUrl = `${environment.api.serverUrl}/api/votes`;
 
   constructor(private http: HttpClient) {}
 

@@ -10,7 +10,7 @@ describe('SuggestionService', () => {
   let service: SuggestionService;
   let httpMock: HttpTestingController;
   let userServiceSpy: jasmine.SpyObj<UserService>;
-  const apiUrl = `${environment.apiUrl}/api/suggestions`;
+  const apiUrl = `${environment.api.serverUrl}/api/suggestions`;
 
   beforeEach(() => {
     const spy = jasmine.createSpyObj('UserService', ['refreshUserData']);

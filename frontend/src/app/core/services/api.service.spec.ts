@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 describe('ApiService', () => {
   let service: ApiService;
   let httpMock: HttpTestingController;
-  const apiUrl = environment.apiUrl;
+  const apiUrl = environment.api.serverUrl;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
