@@ -9,6 +9,6 @@ export const environment = {
     }
   },
   api: {
-    serverUrl: 'https://gayness-scale-api.francis1592.workers.dev'
+    serverUrl: 'https://gayness-scale-api-production.francis1592.workers.dev'
   }
 }; 
