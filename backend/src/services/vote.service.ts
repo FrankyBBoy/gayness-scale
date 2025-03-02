@@ -1,5 +1,6 @@
 import { User, UserService } from './user.service';
-import { Suggestion, SuggestionService } from './suggestion.service';
+import { SuggestionService } from './suggestion.service';
+import { Suggestion } from '../models/suggestion.model';
 
 const MAX_DAILY_VOTES = 10; // Cette constante n'est plus utilisée mais peut être conservée pour référence
 const K_FACTOR = 32; // ELO K-factor, determines how much ratings change
@@ -96,11 +97,11 @@ export class VoteService {
       const now = new Date().toISOString();
       const result = await this.db
         .prepare(
-          `INSERT INTO votes (winner_id, loser_id, user_id, created_at)
-           VALUES (?, ?, ?, ?)
+          `INSERT INTO votes (winner_id, loser_id, user_id, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?)
            RETURNING *`
         )
-        .bind(winnerId, loserId, userId, now)
+        .bind(winnerId, loserId, userId, now, now)
         .first<Vote>();
 
       if (!result) {
@@ -109,11 +110,6 @@ export class VoteService {
 
       // Update ELO scores
       await this.updateEloScores(winner, loser);
-
-      // Update user's last vote date
-      await this.userService.updateUser(userId, {
-        last_vote_date: now
-      });
 
       return result;
     } catch (error) {

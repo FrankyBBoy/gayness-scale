@@ -49,7 +49,9 @@ export class VoteComponent implements OnInit {
       error: (error: HttpErrorResponse) => {
         this.loading = false;
         
-        if (error.status === 404) {
+        if (error.status === 404 || 
+            (error.error && error.error.message && 
+             error.error.message.includes('No more suggestions to vote on'))) {
           this.error = 'NO_MORE_SUGGESTIONS';
         } else {
           this.error = error.error?.message || 'Failed to load suggestions';
