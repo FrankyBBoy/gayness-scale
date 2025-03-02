@@ -118,14 +118,14 @@
 ## 5. Tests
 
 ### Backend
-- [ ] Tests unitaires des services
-  - [ ] Tester la sélection aléatoire des suggestions
-  - [ ] Tester l'algorithme ELO
-  - [ ] Tester la logique de comparaison
-- [ ] Tests d'intégration des endpoints
-  - [ ] Tester le flux complet de vote
-  - [ ] Vérifier la mise à jour des scores
-  - [ ] Valider la non-répétition des suggestions
+- [x] Tests unitaires des services
+  - [x] Tester la sélection aléatoire des suggestions
+  - [x] Tester l'algorithme ELO
+  - [x] Tester la logique de comparaison
+- [x] Tests d'intégration des endpoints
+  - [x] Tester le flux complet de vote
+  - [x] Vérifier la mise à jour des scores
+  - [x] Valider la non-répétition des suggestions
 
 ### Frontend
 - [ ] Tests unitaires des services
