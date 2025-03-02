@@ -203,9 +203,9 @@
     - [x] Mettre à jour le template de vote (`frontend/src/app/pages/vote/vote.component.html`)
       - [x] Supprimer l'affichage du nombre de votes restants
       - [x] Supprimer ou modifier la section "Daily limit reached"
-  - [ ] Base de données:
-    - [ ] Créer une migration pour supprimer la colonne `daily_votes_count` de la table `users` (optionnel, peut être conservée mais non utilisée)
-    - [ ] Mettre à jour les scripts d'initialisation de la base de données si nécessaire
+  - [x] Base de données:
+    - [x] Créer une migration pour supprimer la colonne `daily_votes_count` de la table `users` (optionnel, peut être conservée mais non utilisée)
+    - [x] Mettre à jour les scripts d'initialisation de la base de données si nécessaire
 
 - [x] Conserver la limite quotidienne de 5 suggestions par utilisateur
   - [x] S'assurer que toutes les vérifications liées à `daily_suggestions_count` restent intactes
