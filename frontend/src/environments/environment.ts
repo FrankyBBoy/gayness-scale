@@ -8,5 +8,7 @@ export const environment = {
       audience: 'https://gayness-scale-backend/'
     }
   },
-  apiUrl: 'http://localhost:8787'
+  api: {
+    serverUrl: 'http://localhost:8787'
+  }
 }; 
