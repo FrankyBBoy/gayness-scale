@@ -10,7 +10,7 @@ AUTH0_AUDIENCE = "https://gayness-scale-backend/"
 [[d1_databases]]
 binding = "DB"
 database_name = "gayness-scale-db"
-database_id = "6ab634ac-23cc-42f7-881d-4a174914c10e"
+database_id = "854ea3b8-5140-4540-977a-9cc504e73675"
 
 [dev]
 port = 8787

@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS suggestions (
     description TEXT,
     user_id TEXT NOT NULL,
     status TEXT CHECK(status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
-    elo_score INTEGER DEFAULT 1500,
+    elo_score INTEGER NOT NULL DEFAULT 1500,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users (id)

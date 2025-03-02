@@ -1,6 +1,3 @@
--- Add ELO score to suggestions
-ALTER TABLE suggestions ADD COLUMN elo_score INTEGER NOT NULL DEFAULT 1500;
-
 -- Drop existing votes table
 DROP TABLE IF EXISTS votes;
 
