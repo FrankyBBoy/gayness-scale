@@ -99,7 +99,7 @@ export class SuggestionService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  getRandomPair(): Observable<{ pair: [Suggestion, Suggestion]; remainingCount: number }> {
-    return this.http.get<{ pair: [Suggestion, Suggestion]; remainingCount: number }>(`${this.apiUrl}/random-pair`);
+  getRandomPair(): Observable<{ pair: [Suggestion, Suggestion] }> {
+    return this.http.get<{ pair: [Suggestion, Suggestion] }>(`${this.apiUrl}/random-pair`);
   }
 } 

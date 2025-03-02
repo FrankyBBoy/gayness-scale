@@ -2,6 +2,8 @@ import { Router, IRequest } from 'itty-router';
 import { AuthContext } from '../middleware/auth';
 import { VoteService } from '../services/vote.service';
 import { json, error } from '../utils/response';
+import { SuggestionService } from '../services/suggestion.service';
+import { UserService } from '../services/user.service';
 
 interface Env {
   DB: D1Database;
@@ -17,30 +19,31 @@ export function createVoteRouter() {
     }
 
     try {
-      const { winner_id, loser_id } = await request.json<{ winner_id: number; loser_id: number }>();
+      const body = await request.json() as { winner_id: number; loser_id: number };
+      const { winner_id, loser_id } = body;
 
       if (!winner_id || !loser_id) {
-        return error('Both winner_id and loser_id are required', 400);
+        return error('Missing winner_id or loser_id', 400);
       }
 
-      if (winner_id === loser_id) {
-        return error('Cannot vote on the same suggestion', 400);
-      }
+      const suggestionService = new SuggestionService(env.DB);
+      const userService = new UserService(env.DB);
+      const voteService = new VoteService(env.DB, suggestionService, userService);
 
-      const voteService = new VoteService(env.DB);
-      
-      try {
-        const vote = await voteService.createVote(ctx.user.sub, winner_id, loser_id);
-        return json(vote, 201);
-      } catch (e) {
-        if (e instanceof Error && e.message === 'Daily vote limit reached') {
-          return error('Daily vote limit reached', 429);
-        }
-        throw e;
-      }
+      const vote = await voteService.createVote(ctx.user.sub, winner_id, loser_id);
+      return json(vote, 201);
     } catch (e) {
       console.error('Error creating vote:', e);
-      return error('Internal Server Error', 500);
+      
+      if (e instanceof Error && e.message === 'Already voted on this pair') {
+        return error('You have already voted on this pair', 400);
+      } else if (e instanceof Error && e.message === 'Invalid suggestion IDs') {
+        return error('Invalid suggestion IDs', 400);
+      } else if (e instanceof Error && e.message === 'User not found') {
+        return error('User not found', 404);
+      } else {
+        return error('Internal Server Error', 500);
+      }
     }
   });
 

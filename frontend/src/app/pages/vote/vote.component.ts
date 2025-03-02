@@ -5,6 +5,7 @@ import { SuggestionService, Suggestion } from '../../core/services/suggestion.se
 import { UserService } from '../../core/services/user.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-vote',
@@ -18,10 +19,6 @@ export class VoteComponent implements OnInit {
   rightSuggestion: Suggestion | null = null;
   loading = true;
   error: string | null = null;
-  remainingCount = 0;
-  remainingVotes = 0;
-  isAuthenticated = false;
-  votingEnabled = true;
 
   constructor(
     private voteService: VoteService,
@@ -31,93 +28,57 @@ export class VoteComponent implements OnInit {
     private router: Router
   ) {}
 
-  ngOnInit() {
-    console.log('Vote component initialized');
-    this.authService.isAuthenticated().subscribe(
-      isAuthenticated => {
-        console.log('Authentication status in component:', isAuthenticated);
-        this.isAuthenticated = isAuthenticated;
-        if (isAuthenticated) {
-          this.authService.getAccessToken().subscribe(token => {
-            console.log('Token received in component:', token ? 'yes' : 'no');
-            this.loadRandomPair();
-          });
-        } else {
-          this.error = 'Please log in to vote';
-          this.loading = false;
-        }
-      }
-    );
+  ngOnInit(): void {
+    this.loadRandomPair();
   }
 
   login() {
     this.authService.login().subscribe();
   }
 
-  private loadRandomPair() {
+  loadRandomPair(): void {
     this.loading = true;
     this.error = null;
-
-    console.log('Loading random pair...');
+    
     this.suggestionService.getRandomPair().subscribe({
-      next: response => {
-        console.log('Random pair loaded:', response);
+      next: (response) => {
         this.leftSuggestion = response.pair[0];
         this.rightSuggestion = response.pair[1];
-        this.remainingCount = response.remainingCount;
-        this.remainingVotes = response.remainingCount;
         this.loading = false;
       },
-      error: err => {
-        console.error('Error loading random pair:', err);
-        if (err.status === 401) {
-          this.error = 'Please log in to vote';
-          this.isAuthenticated = false;
-        } else if (err.status === 404) {
-          console.log('NO_MORE_SUGGESTIONS');
+      error: (error: HttpErrorResponse) => {
+        this.loading = false;
+        
+        if (error.status === 404) {
           this.error = 'NO_MORE_SUGGESTIONS';
         } else {
-          this.error = 'Failed to load suggestions. Please try again later.';
+          this.error = error.error?.message || 'Failed to load suggestions';
         }
-        this.loading = false;
       }
     });
   }
 
-  vote(winner: Suggestion, loser: Suggestion) {
-    if (!this.isAuthenticated) {
-      this.error = 'Please log in to vote';
-      return;
-    }
-
+  vote(winner: Suggestion, loser: Suggestion): void {
+    if (this.loading) return;
+    
     this.loading = true;
-    this.error = null;
-
+    
     this.voteService.createVote(winner.id, loser.id).subscribe({
       next: () => {
         this.loadRandomPair();
       },
-      error: err => {
-        console.error('Error creating vote:', err);
-        if (err.status === 429) {
-          this.error = 'You have reached your daily voting limit. Please try again tomorrow.';
-          this.votingEnabled = false;
-        } else if (err.status === 401) {
-          this.error = 'Please log in to vote';
-          this.isAuthenticated = false;
-        } else {
-          this.error = 'Failed to submit vote. Please try again later.';
-        }
+      error: (error: HttpErrorResponse) => {
         this.loading = false;
+        this.error = error.error?.message || 'Failed to submit vote';
       }
     });
   }
 
-  skipPair() {
+  skipPair(): void {
     this.loadRandomPair();
   }
 
-  navigateToSuggest() {
+  navigateToSuggest(): void {
     this.router.navigate(['/suggest']);
   }
 } 

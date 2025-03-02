@@ -4,11 +4,6 @@
       <h1 class="text-4xl font-bold text-primary-600 mb-4 font-display">
         <span class="inline-block animate-bounce-slow">❤️</span> Vote for the Gayest
       </h1>
-      @if (remainingVotes > 0) {
-        <p class="mt-2 text-lg text-gray-600 font-medium">
-          You have <span class="text-secondary-600 font-bold">{{ remainingVotes }}</span> votes remaining today
-        </p>
-      }
     </div>
 
     <!-- Error message -->
@@ -50,24 +45,8 @@
       </div>
     }
 
-    <!-- Daily limit reached -->
-    @if (!loading && !votingEnabled) {
-      <div class="text-center py-16 bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto border border-primary-200">
-        <div class="text-4xl mb-4">⏰</div>
-        <h3 class="text-xl font-bold text-primary-600 mb-2 font-display">Daily Voting Limit Reached</h3>
-        <p class="text-gray-600 text-lg">Come back tomorrow to continue voting!</p>
-        <p class="text-gray-500 mt-4">In the meantime, why not add some new suggestions?</p>
-        <button
-          (click)="navigateToSuggest()"
-          class="mt-6 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-        >
-          <span class="mr-1">💡</span> Add Suggestion
-        </button>
-      </div>
-    }
-
     <!-- Voting cards -->
-    @if (!loading && votingEnabled && leftSuggestion && rightSuggestion) {
+    @if (!loading && !error && leftSuggestion && rightSuggestion) {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- Left suggestion -->
         <div class="rainbow-border">

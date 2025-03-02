@@ -159,6 +159,10 @@ export class SuggestionService {
       .bind(userId, userId)
       .all<Suggestion>();
 
+    if (result.results.length < 2) {
+      throw new Error('No more suggestions to vote on');
+    }
+
     // Get total count of remaining suggestions to vote on
     const countResult = await this.db
       .prepare(`
@@ -174,7 +178,7 @@ export class SuggestionService {
       .first<{ count: number }>();
 
     return {
-      pair: result.results,
+      pair: [result.results[0], result.results[1]],
       remainingCount: countResult?.count || 0
     };
   }

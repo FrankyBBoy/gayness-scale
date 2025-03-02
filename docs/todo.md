@@ -71,7 +71,7 @@
   - [x] GET /api/suggestions/random-pair (paire aléatoire pour vote)
 
 - [x] Votes
-  - [x] POST /api/votes (création avec limite quotidienne)
+  - [x] POST /api/votes (création sans limite quotidienne)
   - [x] GET /api/votes/user/:id (votes d'un utilisateur)
 
 ### Services
@@ -82,7 +82,6 @@
   - [x] Récupération de paires aléatoires pour le vote
 - [x] Service de gestion des votes
   - [x] Implémentation de l'algorithme ELO
-  - [x] Gestion des limites quotidiennes (10 votes/jour)
   - [x] Tracking des suggestions déjà votées
 
 ## 4. Frontend Implementation
@@ -107,7 +106,7 @@
 - [x] Auth Service (intégration Auth0)
 - [x] API Service
 - [x] User Service
-  - [x] Gestion des limites quotidiennes
+  - [x] Gestion des limites quotidiennes pour les suggestions uniquement
 - [x] Suggestion Service
   - [x] Intégration avec l'API
   - [x] Gestion des suggestions
@@ -179,4 +178,44 @@
 - [ ] Amélioration de l'expérience utilisateur
   - [ ] Ajouter des statistiques plus détaillées sur les votes
   - [ ] Améliorer l'affichage de l'historique des votes
-  - [ ] Optimiser les animations et transitions 
+  - [ ] Optimiser les animations et transitions
+
+## 9. Modifications du système de vote
+
+### Changements à implémenter
+- [ ] Supprimer la limite quotidienne de votes
+  - [ ] Backend:
+    - [ ] Modifier le service de vote (`backend/src/services/vote.service.ts`) pour ne plus vérifier la limite quotidienne
+      - [ ] Supprimer la vérification `daily_votes_count < 10` dans la méthode `createVote`
+      - [ ] Supprimer la mise à jour du compteur `daily_votes_count` dans la méthode `createVote`
+    - [ ] Modifier la route de vote (`backend/src/routes/vote.routes.ts`) pour ne plus renvoyer d'erreur 429
+      - [ ] Supprimer la gestion de l'erreur 'Daily vote limit reached'
+    - [ ] Mettre à jour le service de suggestion (`backend/src/services/suggestion.service.ts`) pour ne plus inclure le nombre de votes restants dans la réponse
+      - [ ] Modifier la méthode `getRandomPairForVoting` pour ne plus calculer `remainingCount` basé sur les votes restants
+  - [ ] Frontend:
+    - [ ] Mettre à jour le service utilisateur (`frontend/src/app/core/services/user.service.ts`)
+      - [ ] Supprimer ou modifier la méthode `canVoteToday`
+      - [ ] Supprimer ou modifier la méthode `getRemainingVotes`
+    - [ ] Mettre à jour le composant de vote (`frontend/src/app/pages/vote/vote.component.ts`)
+      - [ ] Supprimer la propriété `remainingVotes`
+      - [ ] Supprimer la gestion de l'erreur 429
+      - [ ] Supprimer la propriété `votingEnabled` ou la modifier pour qu'elle ne soit plus basée sur la limite quotidienne
+    - [ ] Mettre à jour le template de vote (`frontend/src/app/pages/vote/vote.component.html`)
+      - [ ] Supprimer l'affichage du nombre de votes restants
+      - [ ] Supprimer ou modifier la section "Daily limit reached"
+  - [ ] Base de données:
+    - [ ] Créer une migration pour supprimer la colonne `daily_votes_count` de la table `users` (optionnel, peut être conservée mais non utilisée)
+    - [ ] Mettre à jour les scripts d'initialisation de la base de données si nécessaire
+
+- [ ] Conserver la limite quotidienne de 5 suggestions par utilisateur
+  - [ ] S'assurer que toutes les vérifications liées à `daily_suggestions_count` restent intactes
+  - [ ] Vérifier que la limite de 5 suggestions par jour est toujours correctement appliquée dans le service de suggestion
+  - [ ] Vérifier que l'interface utilisateur affiche toujours correctement le nombre de suggestions restantes
+
+### Tests à effectuer après les modifications
+- [ ] Vérifier que les utilisateurs peuvent voter sans limite quotidienne
+- [ ] Vérifier que l'interface n'affiche plus de compteur de votes restants
+- [ ] Vérifier que l'erreur 429 n'est plus renvoyée pour les votes
+- [ ] Vérifier que la limite de 5 suggestions par jour fonctionne toujours correctement
+- [ ] Vérifier que l'algorithme ELO continue de fonctionner correctement
+- [ ] Vérifier que le tracking des suggestions déjà votées fonctionne toujours 

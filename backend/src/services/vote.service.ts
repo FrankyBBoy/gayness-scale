@@ -1,7 +1,7 @@
-import { User } from './user.service';
-import { Suggestion } from './suggestion.service';
+import { User, UserService } from './user.service';
+import { Suggestion, SuggestionService } from './suggestion.service';
 
-const MAX_DAILY_VOTES = 10;
+const MAX_DAILY_VOTES = 10; // Cette constante n'est plus utilisée mais peut être conservée pour référence
 const K_FACTOR = 32; // ELO K-factor, determines how much ratings change
 const DEFAULT_ELO = 1500; // Default ELO score for new suggestions
 
@@ -14,8 +14,17 @@ export interface Vote {
   updated_at: string;
 }
 
+export interface PaginatedVotes {
+  items: Vote[];
+  total: number;
+}
+
 export class VoteService {
-  constructor(private db: D1Database) {}
+  constructor(
+    private db: D1Database,
+    private suggestionService: SuggestionService,
+    private userService: UserService
+  ) {}
 
   private async getSuggestionElo(suggestionId: number): Promise<number> {
     const result = await this.db
@@ -36,59 +45,77 @@ export class VoteService {
     };
   }
 
-  private async updateEloScores(winnerId: number, loserId: number): Promise<void> {
-    const winnerElo = await this.getSuggestionElo(winnerId);
-    const loserElo = await this.getSuggestionElo(loserId);
+  private async updateEloScores(winner: Suggestion, loser: Suggestion): Promise<void> {
+    const winnerElo = await this.getSuggestionElo(winner.id);
+    const loserElo = await this.getSuggestionElo(loser.id);
     
     const { winnerChange, loserChange } = this.calculateEloChange(winnerElo, loserElo);
 
     // Update winner's ELO
     await this.db
       .prepare('UPDATE suggestions SET elo_score = ? WHERE id = ?')
-      .bind(winnerElo + winnerChange, winnerId)
+      .bind(winnerElo + winnerChange, winner.id)
       .run();
 
     // Update loser's ELO
     await this.db
       .prepare('UPDATE suggestions SET elo_score = ? WHERE id = ?')
-      .bind(loserElo + loserChange, loserId)
+      .bind(loserElo + loserChange, loser.id)
       .run();
   }
 
   async createVote(userId: string, winnerId: number, loserId: number): Promise<Vote> {
-    // Check daily vote limit
-    const today = new Date().toISOString().split('T')[0];
-    const voteCount = await this.db
-      .prepare('SELECT COUNT(*) as count FROM votes WHERE user_id = ? AND DATE(created_at) = ?')
-      .bind(userId, today)
-      .first<{ count: number }>();
-
-    if (voteCount && voteCount.count >= MAX_DAILY_VOTES) {
-      throw new Error('Daily vote limit reached');
-    }
-
-    // Start transaction
-    const now = new Date().toISOString();
-    
     try {
-      // Create vote record
-      const vote = await this.db
+      // Validate that winner and loser exist
+      const [winner, loser] = await Promise.all([
+        this.suggestionService.findById(winnerId),
+        this.suggestionService.findById(loserId)
+      ]);
+
+      if (!winner || !loser) {
+        throw new Error('Invalid suggestion IDs');
+      }
+
+      // Get user
+      const user = await this.userService.getUserById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Check if user has already voted on this pair
+      const existingVote = await this.db
+        .prepare('SELECT * FROM votes WHERE user_id = ? AND ((winner_id = ? AND loser_id = ?) OR (winner_id = ? AND loser_id = ?))')
+        .bind(userId, winnerId, loserId, loserId, winnerId)
+        .first();
+
+      if (existingVote) {
+        throw new Error('Already voted on this pair');
+      }
+
+      // Create vote
+      const now = new Date().toISOString();
+      const result = await this.db
         .prepare(
-          `INSERT INTO votes (winner_id, loser_id, user_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?)
+          `INSERT INTO votes (winner_id, loser_id, user_id, created_at)
+           VALUES (?, ?, ?, ?)
            RETURNING *`
         )
-        .bind(winnerId, loserId, userId, now, now)
+        .bind(winnerId, loserId, userId, now)
         .first<Vote>();
 
-      if (!vote) {
+      if (!result) {
         throw new Error('Failed to create vote');
       }
 
       // Update ELO scores
-      await this.updateEloScores(winnerId, loserId);
+      await this.updateEloScores(winner, loser);
 
-      return vote;
+      // Update user's last vote date
+      await this.userService.updateUser(userId, {
+        last_vote_date: now
+      });
+
+      return result;
     } catch (error) {
       console.error('Error in createVote:', error);
       throw error;
@@ -100,8 +127,6 @@ export class VoteService {
 
     // Décoder l'ID utilisateur qui pourrait contenir des caractères encodés dans l'URL
     const decodedUserId = decodeURIComponent(userId);
-
-
 
     const countResult = await this.db
       .prepare('SELECT COUNT(*) as count FROM votes WHERE user_id = ?')
