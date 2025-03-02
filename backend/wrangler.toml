@@ -16,3 +16,6 @@ database_id = "854ea3b8-5140-4540-977a-9cc504e73675"
 port = 8787
 local_protocol = "http"
 ip = "127.0.0.1" 
+
+[observability]
+enabled = true
