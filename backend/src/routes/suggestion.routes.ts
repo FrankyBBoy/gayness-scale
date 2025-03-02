@@ -18,9 +18,18 @@ export function createSuggestionRouter() {
       const pageSize = parseInt(url.searchParams.get('per_page') || '10');
       const sortBy = url.searchParams.get('sort_by') || 'created_at';
       const sortOrder = url.searchParams.get('sort_order') || 'desc';
+      const userId = url.searchParams.get('user_id');
 
       const suggestionService = new SuggestionService(env.DB);
-      const suggestions = await suggestionService.findAll(page, pageSize, sortBy, sortOrder);
+      
+      let suggestions;
+      if (userId) {
+        // Si user_id est présent, récupérer les suggestions de cet utilisateur
+        suggestions = await suggestionService.findByUserId(userId, page, pageSize);
+      } else {
+        // Sinon, récupérer toutes les suggestions
+        suggestions = await suggestionService.findAll(page, pageSize, sortBy, sortOrder);
+      }
 
       return json(suggestions);
     } catch (e) {

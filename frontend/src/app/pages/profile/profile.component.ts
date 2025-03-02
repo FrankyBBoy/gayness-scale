@@ -133,7 +133,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     } catch (err) {
       console.error('Error loading user suggestions:', err);
       this.loadingSuggestions = false;
-      throw err;
+      return null;
     }
   }
 
