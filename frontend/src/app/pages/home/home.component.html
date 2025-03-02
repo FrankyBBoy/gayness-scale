@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gradient-to-b from-primary-50 to-secondary-50 cursor-rainbow">
+<div class="min-h-screen bg-gradient-to-b from-primary-50 to-secondary-50">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="text-center mb-12">
       <h1 class="text-4xl font-bold text-primary-600 mb-4 font-display">
@@ -77,8 +77,8 @@
                   <div>
                     <p class="text-sm text-gray-700">
                       Showing <span class="font-medium">{{ (currentPage - 1) * pageSize + 1 }}</span> to 
-                      <span class="font-medium">{{ Math.min(currentPage * pageSize, totalPages * pageSize) }}</span> of 
-                      <span class="font-medium">{{ totalPages * pageSize }}</span> results
+                      <span class="font-medium">{{ Math.min(currentPage * pageSize, totalItems) }}</span> of 
+                      <span class="font-medium">{{ totalItems }}</span> results
                     </p>
                   </div>
                   <div>

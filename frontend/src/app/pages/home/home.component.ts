@@ -19,6 +19,7 @@ export class HomeComponent implements OnInit {
   currentPage = 1;
   pageSize = 10;
   totalPages = 1;
+  totalItems = 0;
   Math = Math;
 
   constructor(
@@ -42,6 +43,7 @@ export class HomeComponent implements OnInit {
       next: (results) => {
         this.suggestions = results.topSuggestions.items;
         this.latestSuggestions = results.latestSuggestions;
+        this.totalItems = results.topSuggestions.total;
         this.totalPages = Math.ceil(results.topSuggestions.total / this.pageSize);
         this.loading = false;
       },
@@ -61,6 +63,7 @@ export class HomeComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.suggestions = response.items;
+          this.totalItems = response.total;
           this.totalPages = Math.ceil(response.total / this.pageSize);
           this.loading = false;
         },
