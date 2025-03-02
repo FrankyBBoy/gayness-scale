@@ -54,7 +54,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.userSubscription = this.userService.currentUser$.subscribe(user => {
       if (user) {
         this.user = user;
-        this.remainingSuggestions = 5 - (user.daily_suggestions_count || 0);
+        this.remainingSuggestions = this.userService.getRemainingSuggestions(user);
       }
     });
   }
@@ -73,7 +73,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       next: (user) => {
         this.user = user;
         if (user) {
-          this.remainingSuggestions = 5 - (user.daily_suggestions_count || 0);
+          this.remainingSuggestions = this.userService.getRemainingSuggestions(user);
           this.loadUserActivity(user.id);
         }
       },

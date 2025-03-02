@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, switchMap, tap, BehaviorSubject } from 'rxjs';
+import { Observable, switchMap, tap, BehaviorSubject, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from './auth.service';
 import { User as Auth0User } from '@auth0/auth0-spa-js';
@@ -10,6 +10,7 @@ export interface User {
   email: string;
   daily_votes_count: number;
   daily_suggestions_count: number;
+  last_suggestion_date: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -51,18 +52,22 @@ export class UserService {
       }),
       tap(response => console.log('Sync response:', response)),
       switchMap(() => this.http.get<User>(this.apiUrl)),
+      map(user => this.checkDailyLimits(user)),
       tap(user => this.currentUserSubject.next(user))
     );
   }
 
   refreshUserData(): Observable<User> {
     return this.http.get<User>(this.apiUrl).pipe(
+      map(user => this.checkDailyLimits(user)),
       tap(user => this.currentUserSubject.next(user))
     );
   }
 
   getUserById(id: string): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/${id}`);
+    return this.http.get<User>(`${this.apiUrl}/${id}`).pipe(
+      map(user => this.checkDailyLimits(user))
+    );
   }
 
   private syncUser(userData: SyncUserData): Observable<User> {
@@ -78,7 +83,8 @@ export class UserService {
   }
 
   canSuggest(user: User): boolean {
-    return user.daily_suggestions_count < 5;
+    const checkedUser = this.checkDailyLimits(user);
+    return checkedUser.daily_suggestions_count < 5;
   }
 
   getRemainingVotes(user: User): number {
@@ -86,6 +92,29 @@ export class UserService {
   }
 
   getRemainingSuggestions(user: User): number {
-    return 5 - (user.daily_suggestions_count || 0);
+    const checkedUser = this.checkDailyLimits(user);
+    return 5 - (checkedUser.daily_suggestions_count || 0);
+  }
+
+  // Vérifie si la date de dernière suggestion est d'un jour différent
+  // et réinitialise le compteur si nécessaire
+  private checkDailyLimits(user: User): User {
+    if (!user) return user;
+    
+    const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+    const lastSuggestionDate = user.last_suggestion_date ? 
+      new Date(user.last_suggestion_date).toISOString().split('T')[0] : null;
+    
+    // Si la dernière suggestion date d'un jour différent ou est null,
+    // on réinitialise le compteur
+    if (lastSuggestionDate !== today) {
+      console.log('Resetting daily suggestions count. Last date:', lastSuggestionDate, 'Today:', today);
+      return {
+        ...user,
+        daily_suggestions_count: 0
+      };
+    }
+    
+    return user;
   }
 } 
