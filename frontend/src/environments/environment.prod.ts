@@ -8,7 +8,5 @@ export const environment = {
       audience: 'https://gayness-scale-backend/'
     }
   },
-  api: {
-    serverUrl: 'https://gayness-scale-api.francis1592.workers.dev'
-  }
+  apiUrl: 'https://gayness-scale-api.francis1592.workers.dev'
 }; 

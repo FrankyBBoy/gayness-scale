@@ -42,6 +42,80 @@ npm install
 npm run start
 ```
 
+### Base de données (Cloudflare D1)
+
+L'application utilise Cloudflare D1, une base de données SQL compatible avec SQLite, pour le stockage des données.
+
+#### Création de la base de données
+
+Pour créer une nouvelle base de données D1 :
+
+```bash
+cd backend
+wrangler d1 create gayness-scale-db
+```
+
+Cette commande génère un nouvel ID de base de données qu'il faut mettre à jour dans le fichier `backend/wrangler.toml` :
+
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "gayness-scale-db"
+database_id = "votre-id-de-base-de-données"
+```
+
+#### Gestion des migrations
+
+Les migrations sont stockées dans le dossier `backend/migrations/` et sont appliquées séquentiellement.
+
+##### Exécuter les migrations en local
+
+Pour initialiser la base de données locale avec toutes les migrations :
+
+```bash
+cd backend
+node scripts/init-db.js
+```
+
+Ou pour exécuter une migration spécifique en local :
+
+```bash
+cd backend
+wrangler d1 execute gayness-scale-db --file="migrations/nom_de_la_migration.sql"
+```
+
+##### Exécuter les migrations en production
+
+Pour appliquer toutes les migrations à la base de données distante :
+
+```bash
+cd backend
+wrangler d1 migrations apply gayness-scale-db --remote
+```
+
+Pour exécuter une migration spécifique en production :
+
+```bash
+cd backend
+wrangler d1 execute gayness-scale-db --file="migrations/nom_de_la_migration.sql" --remote
+```
+
+##### Vérifier l'état de la base de données
+
+Pour vérifier les tables existantes en local :
+
+```bash
+cd backend
+wrangler d1 execute gayness-scale-db --command="SELECT name FROM sqlite_master WHERE type='table';"
+```
+
+Pour vérifier les tables existantes en production :
+
+```bash
+cd backend
+wrangler d1 execute gayness-scale-db --command="SELECT name FROM sqlite_master WHERE type='table';" --remote
+```
+
 ## Documentation
 
 - [Plan d'implémentation](docs/todo.md)
