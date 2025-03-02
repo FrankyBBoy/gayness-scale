@@ -36,14 +36,14 @@
 
     <!-- No more suggestions to vote on -->
     @if (!loading && error === 'NO_MORE_SUGGESTIONS') {
-      <div class="text-center py-16 bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto rainbow-border">
+      <div class="text-center py-16 bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto border border-primary-200">
         <div class="text-4xl mb-4">🎉</div>
         <h3 class="text-xl font-bold text-primary-600 mb-2 font-display">Vous avez tout voté !</h3>
         <p class="text-gray-600 text-lg">Il n'y a plus de suggestions à évaluer pour le moment.</p>
         <p class="text-gray-500 mt-4">Pourquoi ne pas ajouter vos propres suggestions ?</p>
         <button
           (click)="navigateToSuggest()"
-          class="btn-rainbow mt-6"
+          class="mt-6 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           <span class="mr-1">💡</span> Ajouter une suggestion
         </button>
@@ -52,14 +52,14 @@
 
     <!-- Daily limit reached -->
     @if (!loading && !votingEnabled) {
-      <div class="text-center py-16 bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+      <div class="text-center py-16 bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto border border-primary-200">
         <div class="text-4xl mb-4">⏰</div>
         <h3 class="text-xl font-bold text-primary-600 mb-2 font-display">Daily Voting Limit Reached</h3>
         <p class="text-gray-600 text-lg">Come back tomorrow to continue voting!</p>
         <p class="text-gray-500 mt-4">In the meantime, why not add some new suggestions?</p>
         <button
           (click)="navigateToSuggest()"
-          class="btn-rainbow mt-6"
+          class="mt-6 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-primary-500 to-secondary-500 hover:from-primary-600 hover:to-secondary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           <span class="mr-1">💡</span> Add Suggestion
         </button>
