@@ -25,13 +25,32 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 //
-// declare global {
-//   namespace Cypress {
-//     interface Chainable {
-//       login(email: string, password: string): Chainable<void>
-//       drag(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       dismiss(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
-//       visit(originalFn: CommandOriginalFn, url: string, options: Partial<VisitOptions>): Chainable<Element>
-//     }
-//   }
-// }
+// Add mockAuth command
+Cypress.Commands.add('mockAuth', () => {
+  // Mock localStorage for Auth0
+  localStorage.setItem('auth0.is.authenticated', 'true');
+  
+  // Mock the user profile
+  localStorage.setItem('auth0.user', JSON.stringify({
+    sub: 'auth0|123456',
+    email: 'test@example.com',
+    name: 'Test User'
+  }));
+  
+  // Mock the token
+  localStorage.setItem('auth0.token', 'mock-token');
+});
+
+declare global {
+  namespace Cypress {
+    interface Chainable {
+      mockAuth(): Chainable<void>
+      // login(email: string, password: string): Chainable<void>
+      // drag(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
+      // dismiss(subject: string, options?: Partial<TypeOptions>): Chainable<Element>
+      // visit(originalFn: CommandOriginalFn, url: string, options: Partial<VisitOptions>): Chainable<Element>
+    }
+  }
+}
+
+export {};

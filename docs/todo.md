@@ -129,7 +129,7 @@
 
 ### Frontend
 - [x] Tests unitaires des services
-- [ ] Tests des components
+- [x] Tests des components
 - [x] Tests E2E avec Cypress
 
 ## 6. Déploiement
