@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gradient-to-b from-primary-50 to-secondary-50 cursor-rainbow">
+<div class="min-h-screen bg-gradient-to-b from-primary-50 to-secondary-50">
   <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="text-center mb-12">
       <h1 class="text-4xl font-bold text-primary-600 mb-4 font-display">
@@ -40,7 +40,7 @@
                 id="description"
                 formControlName="description"
                 rows="4"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-base transition-colors duration-200"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-base transition-colors duration-200 p-3"
                 [class.border-red-300]="suggestionForm.get('description')?.invalid && suggestionForm.get('description')?.touched"
                 placeholder="Enter your suggestion here..."></textarea>
               @if (suggestionForm.get('description')?.errors?.['required'] && suggestionForm.get('description')?.touched) {
