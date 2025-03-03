@@ -3,21 +3,20 @@
 
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    email TEXT NOT NULL,
-    daily_suggestions_count INTEGER DEFAULT 0,
-    last_suggestion_date TEXT,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  name TEXT,
+  daily_suggestions_count INTEGER DEFAULT 0,
+  last_suggestion_date TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
 );
 
 -- Suggestions table
 CREATE TABLE IF NOT EXISTS suggestions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
     description TEXT,
     user_id TEXT NOT NULL,
-    status TEXT CHECK(status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
     elo_score INTEGER NOT NULL DEFAULT 1500,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,

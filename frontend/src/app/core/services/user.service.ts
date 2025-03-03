@@ -8,7 +8,6 @@ import { User as Auth0User } from '@auth0/auth0-spa-js';
 export interface User {
   id: string;
   email: string;
-  daily_votes_count: number;
   daily_suggestions_count: number;
   last_suggestion_date: string | null;
   created_at: string;
@@ -78,17 +77,9 @@ export class UserService {
     return this.http.post<User>(`${this.apiUrl}/update`, { name });
   }
 
-  canVote(user: User): boolean {
-    return user.daily_votes_count < 10;
-  }
-
   canSuggest(user: User): boolean {
     const checkedUser = this.checkDailyLimits(user);
     return checkedUser.daily_suggestions_count < 5;
-  }
-
-  getRemainingVotes(user: User): number {
-    return 10 - (user.daily_votes_count || 0);
   }
 
   getRemainingSuggestions(user: User): number {

@@ -39,7 +39,6 @@ export class AuthService {
         return {
           id: auth0User.sub || '',
           email: auth0User.email || '',
-          daily_votes_count: 0,
           daily_suggestions_count: 0,
           last_suggestion_date: null,
           created_at: new Date().toISOString(),

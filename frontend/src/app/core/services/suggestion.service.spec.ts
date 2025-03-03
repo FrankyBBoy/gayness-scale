@@ -49,7 +49,6 @@ describe('SuggestionService', () => {
     const mockUser: User = {
       id: 'user1',
       email: 'user@example.com',
-      daily_votes_count: 0,
       daily_suggestions_count: 1,
       last_suggestion_date: new Date().toISOString(),
       created_at: new Date().toISOString(),

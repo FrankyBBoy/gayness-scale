@@ -16,7 +16,7 @@ describe('Suggest Page', () => {
     // Mock API response for user suggestions count
     cy.intercept('GET', '**/api/users/me', {
       statusCode: 200,
-      body: { daily_votes_count: 5, daily_suggestions_count: 2 }
+      body: { daily_suggestions_count: 2 }
     }).as('getUserSuggestions');
     
     // Visit the suggest page before each test

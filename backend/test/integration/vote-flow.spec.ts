@@ -40,9 +40,7 @@ describe('Vote Flow Integration', () => {
         id: 'user1', 
         email: 'user1@example.com', 
         name: 'Test User',
-        daily_votes_count: 3,
         daily_suggestions_count: 2,
-        last_vote_date: '2023-05-01T12:00:00Z',
         last_suggestion_date: '2023-05-01T14:00:00Z',
         created_at: '2023-01-01T00:00:00Z',
         updated_at: '2023-05-01T14:00:00Z'

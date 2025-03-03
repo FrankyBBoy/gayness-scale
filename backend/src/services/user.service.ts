@@ -2,9 +2,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  daily_votes_count: number;
   daily_suggestions_count: number;
-  last_vote_date: string | null;
   last_suggestion_date: string | null;
   created_at: string;
   updated_at: string;
@@ -36,10 +34,10 @@ export class UserService {
       .prepare(
         `INSERT INTO users (
           id, email, name, 
-          daily_votes_count, daily_suggestions_count,
-          last_vote_date, last_suggestion_date,
+          daily_suggestions_count,
+          last_suggestion_date,
           created_at, updated_at
-        ) VALUES (?, ?, ?, 0, 0, NULL, NULL, ?, ?)
+        ) VALUES (?, ?, ?, 0, NULL, ?, ?)
          RETURNING *`
       )
       .bind(id, email, name, now, now)

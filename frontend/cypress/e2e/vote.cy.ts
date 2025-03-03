@@ -25,7 +25,7 @@ describe('Vote Page', () => {
     // Mock API response for user votes
     cy.intercept('GET', '**/api/users/me', {
       statusCode: 200,
-      body: { daily_votes_count: 5, daily_suggestions_count: 2 }
+      body: { daily_suggestions_count: 2 }
     }).as('getUserVotes');
     
     // Visit the vote page before each test
