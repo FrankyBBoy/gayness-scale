@@ -3,9 +3,9 @@
     <div class="max-w-3xl mx-auto">
       <div class="text-center mb-12">
         <h1 class="text-4xl font-bold text-primary-600 mb-4 font-display">
-          <span class="inline-block animate-wiggle">👤</span> Your Profile
+          <span class="inline-block animate-wiggle">👤</span> Votre Profil
         </h1>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">Track your activity and contributions to the Gayness Scale</p>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">Suivez votre activité et vos contributions à la Gayness Scale</p>
       </div>
 
       @if (loading) {
@@ -30,9 +30,9 @@
           <div class="bg-white shadow-lg overflow-hidden sm:rounded-lg">
             <div class="px-6 py-5 sm:px-8 bg-gradient-to-r from-primary-500 to-secondary-500">
               <h3 class="text-xl leading-6 font-medium text-white flex items-center">
-                <span class="mr-2">📋</span> Profile Information
+                <span class="mr-2">📋</span> Informations du Profil
               </h3>
-              <p class="mt-1 max-w-2xl text-sm text-white">Personal details and activity.</p>
+              <p class="mt-1 max-w-2xl text-sm text-white">Détails personnels et activité.</p>
             </div>
             <div class="border-t border-gray-200">
               <dl>
@@ -41,7 +41,7 @@
                   <dd class="mt-1 text-base text-gray-900 sm:mt-0 sm:col-span-2">{{ user?.email }}</dd>
                 </div>
                 <div class="bg-white px-6 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-8">
-                  <dt class="text-base font-medium text-primary-600">Remaining suggestions today</dt>
+                  <dt class="text-base font-medium text-primary-600">Suggestions restantes aujourd'hui</dt>
                   <dd class="mt-1 text-base text-gray-900 sm:mt-0 sm:col-span-2">
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-secondary-100 text-secondary-800">
                       <span class="mr-1">💡</span> {{ remainingSuggestions }}
@@ -57,13 +57,13 @@
           <div class="bg-white shadow-lg overflow-hidden sm:rounded-lg">
             <div class="px-6 py-5 sm:px-8 bg-gradient-to-r from-secondary-500 to-primary-500">
               <h3 class="text-xl leading-6 font-medium text-white flex items-center">
-                <span class="mr-2">📊</span> Activity Statistics
+                <span class="mr-2">📊</span> Statistiques d'Activité
               </h3>
             </div>
             <div class="border-t border-gray-200">
               <dl>
                 <div class="bg-white px-6 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-8">
-                  <dt class="text-base font-medium text-primary-600">Total Suggestions</dt>
+                  <dt class="text-base font-medium text-primary-600">Total des Suggestions</dt>
                   <dd class="mt-1 text-base text-gray-900 sm:mt-0 sm:col-span-2">
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-rainbow-gradient text-white">
                       {{ stats.totalSuggestions }}
@@ -71,7 +71,7 @@
                   </dd>
                 </div>
                 <div class="bg-gray-50 px-6 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-8">
-                  <dt class="text-base font-medium text-primary-600">Total Votes</dt>
+                  <dt class="text-base font-medium text-primary-600">Total des Votes</dt>
                   <dd class="mt-1 text-base text-gray-900 sm:mt-0 sm:col-span-2">
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-rainbow-gradient text-white">
                       {{ stats.totalVotes }}
@@ -87,9 +87,9 @@
           <div class="mt-8">
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-2xl leading-6 font-bold text-primary-600 font-display flex items-center">
-                <span class="mr-2">✨</span> Your Suggestions
+                <span class="mr-2">✨</span> Vos Suggestions
               </h3>
-              <span class="text-sm text-gray-500">Showing {{ (currentSuggestionPage - 1) * suggestionsPerPage + 1 }} - {{ Math.min(currentSuggestionPage * suggestionsPerPage, totalSuggestions) }} of {{ totalSuggestions }}</span>
+              <span class="text-sm text-gray-500">Affichage {{ (currentSuggestionPage - 1) * suggestionsPerPage + 1 }} - {{ Math.min(currentSuggestionPage * suggestionsPerPage, totalSuggestions) }} sur {{ totalSuggestions }}</span>
             </div>
             
             <div class="rainbow-border">
@@ -105,7 +105,7 @@
                         <div class="flex items-center justify-between">
                           <div>
                             <p class="text-base font-medium text-gray-900">{{ suggestion.description }}</p>
-                            <p class="text-sm text-gray-500 mt-1">Created on {{ suggestion.created_at | date:'medium' }}</p>
+                            <p class="text-sm text-gray-500 mt-1">Créée le {{ suggestion.created_at | date:'medium' }}</p>
                           </div>
                           <div>
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-rainbow-gradient text-white">
@@ -127,7 +127,7 @@
                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                           [class.opacity-50]="currentSuggestionPage === 1"
                           [class.cursor-not-allowed]="currentSuggestionPage === 1">
-                          Previous
+                          Précédent
                         </button>
                         <button 
                           [disabled]="currentSuggestionPage === getTotalPages()"
@@ -135,13 +135,13 @@
                           class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                           [class.opacity-50]="currentSuggestionPage === getTotalPages()"
                           [class.cursor-not-allowed]="currentSuggestionPage === getTotalPages()">
-                          Next
+                          Suivant
                         </button>
                       </div>
                       <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                         <div>
                           <p class="text-sm text-gray-700">
-                            Showing <span class="font-medium">{{ (currentSuggestionPage - 1) * suggestionsPerPage + 1 }}</span> to <span class="font-medium">{{ Math.min(currentSuggestionPage * suggestionsPerPage, totalSuggestions) }}</span> of <span class="font-medium">{{ totalSuggestions }}</span> results
+                            Affichage <span class="font-medium">{{ (currentSuggestionPage - 1) * suggestionsPerPage + 1 }}</span> à <span class="font-medium">{{ Math.min(currentSuggestionPage * suggestionsPerPage, totalSuggestions) }}</span> sur <span class="font-medium">{{ totalSuggestions }}</span> résultats
                           </p>
                         </div>
                         <div>
@@ -153,7 +153,7 @@
                               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                               [class.opacity-50]="currentSuggestionPage === 1"
                               [class.cursor-not-allowed]="currentSuggestionPage === 1">
-                              <span class="sr-only">Previous</span>
+                              <span class="sr-only">Précédent</span>
                               <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                               </svg>
@@ -178,7 +178,7 @@
                               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                               [class.opacity-50]="currentSuggestionPage === getTotalPages()"
                               [class.cursor-not-allowed]="currentSuggestionPage === getTotalPages()">
-                              <span class="sr-only">Next</span>
+                              <span class="sr-only">Suivant</span>
                               <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                               </svg>
@@ -197,7 +197,7 @@
         @if (recentVotes.length > 0) {
           <div class="mt-8">
             <h3 class="text-2xl leading-6 font-bold text-primary-600 mb-4 font-display flex items-center">
-              <span class="mr-2">🗳️</span> Your Recent Votes
+              <span class="mr-2">🗳️</span> Vos Votes Récents
             </h3>
             <div class="rainbow-border">
               <div class="bg-white shadow-lg overflow-hidden sm:rounded-lg">
@@ -207,11 +207,11 @@
                       <div class="flex items-center justify-between">
                         <div>
                           <div class="text-base font-medium text-gray-900">
-                            <span class="font-medium text-primary-600">Winner:</span> {{ getDescription(vote.winner_id) }}
+                            <span class="font-medium text-primary-600">Gagnant:</span> {{ getDescription(vote.winner_id) }}
                             <br>
-                            <span class="font-medium text-secondary-600">Loser:</span> {{ getDescription(vote.loser_id) }}
+                            <span class="font-medium text-secondary-600">Perdant:</span> {{ getDescription(vote.loser_id) }}
                           </div>
-                          <p class="text-sm text-gray-500 mt-1">Voted on {{ vote.created_at | date:'medium' }}</p>
+                          <p class="text-sm text-gray-500 mt-1">Voté le {{ vote.created_at | date:'medium' }}</p>
                         </div>
                         <div>
                           <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
