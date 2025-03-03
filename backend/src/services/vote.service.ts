@@ -2,7 +2,6 @@ import { User, UserService } from './user.service';
 import { SuggestionService } from './suggestion.service';
 import { Suggestion } from '../models/suggestion.model';
 
-const MAX_DAILY_VOTES = 10; // Cette constante n'est plus utilisée mais peut être conservée pour référence
 const K_FACTOR = 32; // ELO K-factor, determines how much ratings change
 const DEFAULT_ELO = 1500; // Default ELO score for new suggestions
 

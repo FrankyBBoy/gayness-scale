@@ -4,7 +4,7 @@ export const environment = {
     domain: 'dev-7y1grk6neur7cepa.us.auth0.com',
     clientId: 'tVKlDFBcmF9XHDtcNlOZJAKNfNyYPqBa',
     authorizationParams: {
-      redirect_uri: 'http://localhost:4200/callback',
+      redirect_uri: `${window.location.origin}/#/callback`,
       audience: 'https://gayness-scale-backend/'
     }
   },

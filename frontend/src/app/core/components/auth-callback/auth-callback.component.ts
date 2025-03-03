@@ -3,14 +3,18 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AuthService as Auth0Service } from '@auth0/auth0-angular';
+import { UserService } from '../../services/user.service';
+import { switchMap, catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-auth-callback',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    <div class="flex justify-center items-center h-screen">
+      <div class="text-center">
+        <p class="text-lg">Authentification en cours...</p>
+      </div>
     </div>
   `,
   styles: []
@@ -19,7 +23,8 @@ export class AuthCallbackComponent implements OnInit {
   constructor(
     private router: Router,
     private auth: AuthService,
-    private auth0: Auth0Service
+    private auth0: Auth0Service,
+    private userService: UserService
   ) {}
 
   ngOnInit() {
@@ -30,11 +35,22 @@ export class AuthCallbackComponent implements OnInit {
     this.auth0.isAuthenticated$.subscribe({
       next: (isAuthenticated: boolean) => {
         if (isAuthenticated) {
-          this.auth0.user$.subscribe({
-            next: (user: any) => {
+          this.auth0.user$.pipe(
+            switchMap(user => {
               if (user) {
-                this.router.navigate(['/']);
+                // Synchroniser l'utilisateur avec le backend
+                return this.userService.getCurrentUser().pipe(
+                  catchError(error => {
+                    console.error('Error creating/updating user:', error);
+                    return of(null);
+                  })
+                );
               }
+              return of(null);
+            })
+          ).subscribe({
+            next: (user) => {
+              this.router.navigate(['/']);
             },
             error: (error) => {
               console.error('Error getting user profile:', error);
