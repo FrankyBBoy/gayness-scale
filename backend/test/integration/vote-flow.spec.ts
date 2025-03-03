@@ -64,7 +64,6 @@ describe('Vote Flow Integration', () => {
       
       // Setup mocks for getRandomPairForVoting
       mockDb.all.mockResolvedValueOnce({ results: mockSuggestions });
-      mockDb.first.mockResolvedValueOnce({ count: 10 });
       
       // Mock getUserById directly
       (userService.getUserById as any).mockResolvedValueOnce(mockUser);
@@ -89,7 +88,6 @@ describe('Vote Flow Integration', () => {
       
       // Verify random pair result
       expect(randomPairResult.pair).toHaveLength(2);
-      expect(randomPairResult.remainingCount).toBe(10);
       
       // Step 2: User votes on the pair (selects winner)
       const winnerId = randomPairResult.pair[0].id;

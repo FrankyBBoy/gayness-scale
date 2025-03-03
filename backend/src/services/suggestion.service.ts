@@ -142,44 +142,72 @@ export class SuggestionService {
     };
   }
 
-  async getRandomPairForVoting(userId: string): Promise<{ pair: Suggestion[]; remainingCount: number }> {
-    // Get suggestions not voted by the user (either as winner or loser)
+  async getRandomPairForVoting(userId: string): Promise<{ pair: Suggestion[] }> {
+    // Get a random pair of suggestions that the user hasn't voted on as a pair
     const result = await this.db
       .prepare(`
-        SELECT s.* 
-        FROM suggestions s
-        WHERE s.id NOT IN (
-          SELECT winner_id FROM votes WHERE user_id = ?
-          UNION
-          SELECT loser_id FROM votes WHERE user_id = ?
+        WITH all_suggestions AS (
+          SELECT id FROM suggestions
+        ),
+        voted_pairs AS (
+          SELECT winner_id, loser_id 
+          FROM votes 
+          WHERE user_id = ?
+        ),
+        possible_pairs AS (
+          SELECT a.id as id1, b.id as id2
+          FROM all_suggestions a
+          CROSS JOIN all_suggestions b
+          WHERE a.id < b.id
+        ),
+        unvoted_pairs AS (
+          SELECT p.id1, p.id2
+          FROM possible_pairs p
+          LEFT JOIN voted_pairs v ON 
+            (p.id1 = v.winner_id AND p.id2 = v.loser_id) OR 
+            (p.id1 = v.loser_id AND p.id2 = v.winner_id)
+          WHERE v.winner_id IS NULL
+          ORDER BY RANDOM()
+          LIMIT 1
         )
-        ORDER BY RANDOM()
-        LIMIT 2
+        SELECT 
+          s1.id, s1.description, s1.user_id, s1.elo_score, s1.created_at, s1.updated_at,
+          s2.id as id2, s2.description as description2, s2.user_id as user_id2, 
+          s2.elo_score as elo_score2, s2.created_at as created_at2, s2.updated_at as updated_at2
+        FROM unvoted_pairs up
+        JOIN suggestions s1 ON up.id1 = s1.id
+        JOIN suggestions s2 ON up.id2 = s2.id
       `)
-      .bind(userId, userId)
-      .all<Suggestion>();
+      .bind(userId)
+      .all();
 
-    if (result.results.length < 2) {
+    // If no unvoted pairs are found, throw an error
+    if (!result.results || result.results.length === 0) {
       throw new Error('No more suggestions to vote on');
     }
 
-    // Get total count of remaining suggestions to vote on
-    const countResult = await this.db
-      .prepare(`
-        SELECT COUNT(*) as count 
-        FROM suggestions s
-        WHERE s.id NOT IN (
-          SELECT winner_id FROM votes WHERE user_id = ?
-          UNION
-          SELECT loser_id FROM votes WHERE user_id = ?
-        )
-      `)
-      .bind(userId, userId)
-      .first<{ count: number }>();
+    // Extract the two suggestions from the result
+    const row = result.results[0];
+    const suggestion1: Suggestion = {
+      id: Number(row.id),
+      description: String(row.description),
+      user_id: String(row.user_id),
+      elo_score: Number(row.elo_score),
+      created_at: new Date(String(row.created_at)),
+      updated_at: new Date(String(row.updated_at))
+    };
+    
+    const suggestion2: Suggestion = {
+      id: Number(row.id2),
+      description: String(row.description2),
+      user_id: String(row.user_id2),
+      elo_score: Number(row.elo_score2),
+      created_at: new Date(String(row.created_at2)),
+      updated_at: new Date(String(row.updated_at2))
+    };
 
     return {
-      pair: [result.results[0], result.results[1]],
-      remainingCount: countResult?.count || 0
+      pair: [suggestion1, suggestion2]
     };
   }
 } 

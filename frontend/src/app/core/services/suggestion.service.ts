@@ -22,7 +22,6 @@ export interface PaginatedSuggestions {
 
 export interface RandomPair {
   pair: Suggestion[];
-  remainingCount: number;
 }
 
 @Injectable({
