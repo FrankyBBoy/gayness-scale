@@ -144,39 +144,26 @@ export class SuggestionService {
 
   async getRandomPairForVoting(userId: string): Promise<{ pair: Suggestion[] }> {
     // Get a random pair of suggestions that the user hasn't voted on as a pair
+    // Optimized query to reduce rows read by avoiding CROSS JOIN
     const result = await this.db
       .prepare(`
-        WITH all_suggestions AS (
-          SELECT id FROM suggestions
-        ),
-        voted_pairs AS (
-          SELECT winner_id, loser_id 
-          FROM votes 
+        WITH voted_pairs AS (
+          SELECT 
+            CASE WHEN winner_id < loser_id THEN winner_id ELSE loser_id END AS s1_id,
+            CASE WHEN winner_id < loser_id THEN loser_id ELSE winner_id END AS s2_id
+          FROM votes
           WHERE user_id = ?
-        ),
-        possible_pairs AS (
-          SELECT a.id as id1, b.id as id2
-          FROM all_suggestions a
-          CROSS JOIN all_suggestions b
-          WHERE a.id < b.id
-        ),
-        unvoted_pairs AS (
-          SELECT p.id1, p.id2
-          FROM possible_pairs p
-          LEFT JOIN voted_pairs v ON 
-            (p.id1 = v.winner_id AND p.id2 = v.loser_id) OR 
-            (p.id1 = v.loser_id AND p.id2 = v.winner_id)
-          WHERE v.winner_id IS NULL
-          ORDER BY RANDOM()
-          LIMIT 1
         )
         SELECT 
           s1.id, s1.description, s1.user_id, s1.elo_score, s1.created_at, s1.updated_at,
           s2.id as id2, s2.description as description2, s2.user_id as user_id2, 
           s2.elo_score as elo_score2, s2.created_at as created_at2, s2.updated_at as updated_at2
-        FROM unvoted_pairs up
-        JOIN suggestions s1 ON up.id1 = s1.id
-        JOIN suggestions s2 ON up.id2 = s2.id
+        FROM suggestions s1
+        JOIN suggestions s2 ON s1.id < s2.id
+        LEFT JOIN voted_pairs vp ON vp.s1_id = s1.id AND vp.s2_id = s2.id
+        WHERE vp.s1_id IS NULL
+        ORDER BY RANDOM()
+        LIMIT 1
       `)
       .bind(userId)
       .all();

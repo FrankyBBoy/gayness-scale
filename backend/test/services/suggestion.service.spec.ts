@@ -80,7 +80,8 @@ describe('SuggestionService', () => {
       // Verify that the query uses the correct approach to find unvoted pairs
       expect(mockDb.prepare.mock.calls[0][0]).toContain('voted_pairs');
       expect(mockDb.prepare.mock.calls[0][0]).toContain('WHERE user_id = ?');
-      expect(mockDb.prepare.mock.calls[0][0]).toContain('unvoted_pairs');
+      expect(mockDb.prepare.mock.calls[0][0]).toContain('LEFT JOIN voted_pairs');
+      expect(mockDb.prepare.mock.calls[0][0]).toContain('WHERE vp.s1_id IS NULL');
     });
   });
 }); 
