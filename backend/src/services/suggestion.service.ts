@@ -143,58 +143,70 @@ export class SuggestionService {
   }
 
   async getRandomPairForVoting(userId: string): Promise<{ pair: Suggestion[] }> {
-    // Get a random pair of suggestions that the user hasn't voted on as a pair
-    // Optimized query to reduce rows read by avoiding CROSS JOIN
-    const result = await this.db
-      .prepare(`
-        WITH voted_pairs AS (
-          SELECT 
-            CASE WHEN winner_id < loser_id THEN winner_id ELSE loser_id END AS s1_id,
-            CASE WHEN winner_id < loser_id THEN loser_id ELSE winner_id END AS s2_id
-          FROM votes
-          WHERE user_id = ?
-        )
-        SELECT 
-          s1.id, s1.description, s1.user_id, s1.elo_score, s1.created_at, s1.updated_at,
-          s2.id as id2, s2.description as description2, s2.user_id as user_id2, 
-          s2.elo_score as elo_score2, s2.created_at as created_at2, s2.updated_at as updated_at2
-        FROM suggestions s1
-        JOIN suggestions s2 ON s1.id < s2.id
-        LEFT JOIN voted_pairs vp ON vp.s1_id = s1.id AND vp.s2_id = s2.id
-        WHERE vp.s1_id IS NULL
-        ORDER BY RANDOM()
-        LIMIT 1
-      `)
-      .bind(userId)
-      .all();
 
-    // If no unvoted pairs are found, throw an error
-    if (!result.results || result.results.length === 0) {
-      throw new Error('No more suggestions to vote on');
-    }
-
-    // Extract the two suggestions from the result
-    const row = result.results[0];
-    const suggestion1: Suggestion = {
-      id: Number(row.id),
-      description: String(row.description),
-      user_id: String(row.user_id),
-      elo_score: Number(row.elo_score),
-      created_at: new Date(String(row.created_at)),
-      updated_at: new Date(String(row.updated_at))
-    };
+    const suggestionsStmt = this.db.prepare(`
+      SELECT id, description, user_id, elo_score, created_at, updated_at
+      FROM suggestions
+    `);
     
-    const suggestion2: Suggestion = {
-      id: Number(row.id2),
-      description: String(row.description2),
-      user_id: String(row.user_id2),
-      elo_score: Number(row.elo_score2),
-      created_at: new Date(String(row.created_at2)),
-      updated_at: new Date(String(row.updated_at2))
-    };
-
-    return {
-      pair: [suggestion1, suggestion2]
-    };
+    const suggestionsResult = await suggestionsStmt.all<Suggestion>();
+    const suggestions = suggestionsResult.results || [];
+    
+    if (suggestions.length < 2) {
+      throw new Error("No more suggestions to vote on");
+    }
+    
+    // 2. Récupérer les paires déjà votées par l'utilisateur
+    const votedPairsStmt = this.db.prepare(`
+      SELECT 
+        CASE WHEN winner_id < loser_id THEN winner_id ELSE loser_id END AS suggestion1_id,
+        CASE WHEN winner_id < loser_id THEN loser_id ELSE winner_id END AS suggestion2_id
+      FROM votes
+      WHERE user_id = ?
+    `);
+    
+    const votedPairsResult = await votedPairsStmt.bind(userId).all<{suggestion1_id: string, suggestion2_id: string}>();
+    const votedPairs = votedPairsResult.results || [];
+    
+    // Créer un Set pour une recherche rapide des paires déjà votées
+    const votedPairsSet = new Set<string>();
+    for (const pair of votedPairs) {
+      votedPairsSet.add(`${pair.suggestion1_id}:${pair.suggestion2_id}`);
+    }
+    
+    // 3. Générer toutes les paires possibles non votées
+    const unvotedPairs: [Suggestion, Suggestion][] = [];
+    
+    for (let i = 0; i < suggestions.length; i++) {
+      for (let j = i + 1; j < suggestions.length; j++) {
+        const s1 = suggestions[i];
+        const s2 = suggestions[j];
+        
+        // Vérifier si cette paire a déjà été votée
+        const pairKey = s1.id < s2.id 
+          ? `${s1.id}:${s2.id}` 
+          : `${s2.id}:${s1.id}`;
+        
+        if (!votedPairsSet.has(pairKey)) {
+          unvotedPairs.push([s1, s2]);
+        }
+      }
+    }
+    
+    if (unvotedPairs.length === 0) {
+      throw new Error("No more suggestions to vote on");
+    }
+    
+    // 4. Sélectionner une paire aléatoire
+    const randomIndex = Math.floor(Math.random() * unvotedPairs.length);
+    const randomPair = unvotedPairs[randomIndex];
+    
+    // Convertir les dates en objets Date
+    randomPair[0].created_at = new Date(randomPair[0].created_at as any);
+    randomPair[0].updated_at = new Date(randomPair[0].updated_at as any);
+    randomPair[1].created_at = new Date(randomPair[1].created_at as any);
+    randomPair[1].updated_at = new Date(randomPair[1].updated_at as any);
+    
+    return { pair: randomPair };
   }
 } 

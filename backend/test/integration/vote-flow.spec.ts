@@ -48,9 +48,13 @@ describe('Vote Flow Integration', () => {
       
       // Mock suggestions for random pair
       const mockSuggestions = [
-        { id: 1, description: 'Suggestion 1', user_id: 'user2', created_at: new Date(), updated_at: new Date() },
-        { id: 2, description: 'Suggestion 2', user_id: 'user3', created_at: new Date(), updated_at: new Date() }
+        { id: 1, description: 'Suggestion 1', user_id: 'user2', elo_score: 1500, created_at: new Date(), updated_at: new Date() },
+        { id: 2, description: 'Suggestion 2', user_id: 'user3', elo_score: 1500, created_at: new Date(), updated_at: new Date() },
+        { id: 3, description: 'Suggestion 3', user_id: 'user4', elo_score: 1500, created_at: new Date(), updated_at: new Date() }
       ];
+      
+      // Mock voted pairs (empty for this test)
+      const mockVotedPairs: any[] = [];
       
       // Mock vote result
       const mockVote = { 
@@ -63,7 +67,9 @@ describe('Vote Flow Integration', () => {
       };
       
       // Setup mocks for getRandomPairForVoting
-      mockDb.all.mockResolvedValueOnce({ results: mockSuggestions });
+      mockDb.all
+        .mockResolvedValueOnce({ results: mockSuggestions }) // First query: get suggestions
+        .mockResolvedValueOnce({ results: mockVotedPairs }); // Second query: get voted pairs
       
       // Mock getUserById directly
       (userService.getUserById as any).mockResolvedValueOnce(mockUser);
@@ -103,7 +109,7 @@ describe('Vote Flow Integration', () => {
       expect(mockDb.prepare).toHaveBeenCalledWith('UPDATE suggestions SET elo_score = ? WHERE id = ?');
       
       // Verify the complete flow
-      expect(mockDb.prepare).toHaveBeenCalledWith(expect.stringContaining('ORDER BY RANDOM()'));
+      expect(mockDb.prepare).toHaveBeenCalledWith(expect.stringContaining('SELECT id, description, user_id, elo_score, created_at, updated_at'));
       expect(mockDb.prepare).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO votes'));
     });
 
